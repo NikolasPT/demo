@@ -169,6 +169,31 @@
       border-radius: 8px;
     }
 
+    /* New small controls styling */
+    .ttt__ai-controls {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: 12px;
+    }
+
+    .ttt__ai-controls label {
+      font-size: 13px;
+      color: var(--muted);
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .ttt__select {
+      background: transparent;
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
     @media (max-width: 420px) {
       :root {
         --mark-vw-factor: 18vw;
@@ -177,6 +202,13 @@
       h1 {
         font-size: 16px;
       }
+
+      .ttt__controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .ttt__ai-controls { margin-left: 0; }
     }
   </style>
 </head>
@@ -223,6 +255,21 @@
         <button id="resetScores" class="ttt__btn" title="Reset scores">
           Reset Scores
         </button>
+
+        <span class="ttt__ai-controls">
+          <label>
+            <input id="vsComputer" type="checkbox" aria-label="Play vs Computer" />
+            Play vs Computer
+          </label>
+
+          <label>
+            <span class="ttt__status-sub">Side:</span>
+            <select id="computerSide" class="ttt__select" aria-label="Computer plays as X or O">
+              <option value="X">X</option>
+              <option value="O" selected>O</option>
+            </select>
+          </label>
+        </span>
       </div>
     </div>
   </main>
@@ -237,6 +284,9 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+
+      const vsComputerCheckbox = document.getElementById('vsComputer');
+      const computerSideSelect = document.getElementById('computerSide');
 
       const WINNING_COMBOS = [
         [0, 1, 2],
@@ -254,6 +304,11 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      // Computer opponent state
+      let vsComputer = false;
+      let computerSide = 'O';
+      let computerMoveTimeout = null;
+
       function init() {
         // initialize board and controls
         cellEls.forEach(cell => {
@@ -264,8 +319,31 @@
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
 
+        vsComputerCheckbox.addEventListener('change', (e) => {
+          vsComputer = e.target.checked;
+          computerSideSelect.disabled = !vsComputer;
+
+          // If enabling vsComputer and it's computer's turn, trigger move
+          maybeTriggerComputerTurn();
+        });
+
+        computerSideSelect.addEventListener('change', (e) => {
+          computerSide = e.target.value;
+
+          // If computer is now set to start and vsComputer is on, trigger
+          maybeTriggerComputerTurn();
+        });
+
+        // set defaults in UI
+        vsComputerCheckbox.checked = vsComputer;
+        computerSideSelect.value = computerSide;
+        computerSideSelect.disabled = !vsComputer;
+
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+
+        // If the computer should start (e.g. computer plays X), trigger
+        maybeTriggerComputerTurn();
       }
 
       function onCellKeyDown(e) {
@@ -279,31 +357,61 @@
         const idx = Number(e.currentTarget.dataset.index);
 
         if (!isGameActive) return;
+
+        // Prevent human from playing on the computer's turn
+        if (vsComputer && currentPlayer === computerSide) return;
+
         if (board[idx]) return;
 
-        board[idx] = currentPlayer;
+        applyMoveAndAdvance(idx);
+      }
 
+      function applyMoveAndAdvance(idx) {
+        // Place move
+        board[idx] = currentPlayer;
         updateCellUI(idx);
 
+        // Check win
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + currentPlayer + ' wins!');
+          const winnerLabel = (vsComputer && currentPlayer === computerSide) ? ('Computer (' + currentPlayer + ')') : ('Player ' + currentPlayer);
+          updateStatus(winnerLabel + ' wins!');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
+
+          // cancel any pending computer move
+          if (computerMoveTimeout) {
+            clearTimeout(computerMoveTimeout);
+            computerMoveTimeout = null;
+          }
           return;
         }
 
+        // Check draw
         if (checkDraw()) {
           isGameActive = false;
           updateStatus('Draw!');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
+
+          if (computerMoveTimeout) {
+            clearTimeout(computerMoveTimeout);
+            computerMoveTimeout = null;
+          }
           return;
         }
 
+        // Continue game
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
-        updateStatus('Player ' + currentPlayer + "'s turn");
+        // Update status: if computer turn, announce computer's turn
+        if (vsComputer && currentPlayer === computerSide) {
+          updateStatus("Computer's turn");
+          // schedule computer move
+          maybeTriggerComputerTurn();
+        } else {
+          updateStatus('Player ' + currentPlayer + "'s turn");
+        }
       }
 
       function updateCellUI(idx) {
@@ -365,6 +473,12 @@
       }
 
       function resetGame() {
+        // clear any pending computer action
+        if (computerMoveTimeout) {
+          clearTimeout(computerMoveTimeout);
+          computerMoveTimeout = null;
+        }
+
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
@@ -387,6 +501,9 @@
 
         updateStatus("Player " + currentPlayer + "'s turn");
         cellEls[0].focus();
+
+        // If computer should start after reset
+        maybeTriggerComputerTurn();
       }
 
       function resetScores() {
@@ -400,6 +517,73 @@
         scoreXEl.textContent = 'X: ' + SCORE.X;
         scoreOEl.textContent = 'O: ' + SCORE.O;
         scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+      }
+
+      // AI helpers
+      function getAvailableMoves() {
+        const moves = [];
+        board.forEach((v, i) => { if (!v) moves.push(i); });
+        return moves;
+      }
+
+      function findWinningMoveFor(player) {
+        for (const combo of WINNING_COMBOS) {
+          const [a, b, c] = combo;
+          const vals = [board[a], board[b], board[c]];
+
+          // if two are player and one empty -> winning/blocking move
+          const countPlayer = vals.filter(v => v === player).length;
+          const emptyIndex = combo.find(i => !board[i]);
+
+          if (countPlayer === 2 && emptyIndex !== undefined) {
+            return emptyIndex;
+          }
+        }
+        return null;
+      }
+
+      function maybeTriggerComputerTurn() {
+        // clear any existing scheduled move first
+        if (computerMoveTimeout) {
+          clearTimeout(computerMoveTimeout);
+          computerMoveTimeout = null;
+        }
+
+        if (!vsComputer || !isGameActive) return;
+        if (currentPlayer !== computerSide) return;
+
+        // Announce computer turn
+        updateStatus("Computer's turn");
+
+        computerMoveTimeout = setTimeout(() => {
+          computerMoveTimeout = null;
+          computerMakeMove();
+        }, 350);
+      }
+
+      function computerMakeMove() {
+        if (!isGameActive) return;
+        if (!vsComputer) return;
+        if (currentPlayer !== computerSide) return;
+
+        const opponent = currentPlayer === 'X' ? 'O' : 'X';
+
+        // 1) Win if possible
+        let move = findWinningMoveFor(currentPlayer);
+        // 2) Block opponent's win
+        if (move === null) move = findWinningMoveFor(opponent);
+        // 3) Take center
+        if (move === null && !board[4]) move = 4;
+        // 4) Take any corner
+        const corners = [0,2,6,8].filter(i => !board[i]);
+        if (move === null && corners.length) move = corners[Math.floor(Math.random()*corners.length)];
+        // 5) Fallback random available
+        const avail = getAvailableMoves();
+        if (move === null && avail.length) move = avail[Math.floor(Math.random()*avail.length)];
+
+        if (move !== null && move !== undefined) {
+          applyMoveAndAdvance(move);
+        }
       }
 
       function render() {
