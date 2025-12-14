@@ -7,7 +7,6 @@
   <style>
     :root {
       --bg: #0f1724;
-      --card: #0b1220;
       --accent: #7c3aed;
       --x: #e11d48;
       --o: #06b6d4;
@@ -69,11 +68,11 @@
       align-items: flex-end;
     }
 
-    .ttt__status .msg {
+    .ttt__status-msg {
       font-weight: 600;
     }
 
-    .ttt__status .sub {
+    .ttt__status-sub {
       font-size: 13px;
       color: var(--muted);
     }
@@ -178,10 +177,10 @@
     <header>
       <h1>Tic Tac Toe</h1>
       <div class="ttt__status">
-        <div id="statusMsg" class="msg" aria-live="polite">
+        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
           Player X's turn
         </div>
-        <div class="sub">
+        <div class="ttt__status-sub">
           Click a cell or use keyboard (Tab + Enter/Space)
         </div>
       </div>
@@ -300,11 +299,11 @@
 
       let board = Array(9).fill('');
       let currentPlayer = 'X';
-      let gameActive = true;
+      let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       function init() {
-        cellEls.forEach(function (cell) {
+        cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
         });
@@ -329,7 +328,7 @@
       function onCellClick(e) {
         const idx = Number(e.currentTarget.dataset.index);
 
-        if (!gameActive) {
+        if (!isGameActive) {
           return;
         }
 
@@ -342,7 +341,7 @@
         updateCellUI(idx);
 
         if (checkWin()) {
-          gameActive = false;
+          isGameActive = false;
           updateStatus('Player ' + currentPlayer + ' wins!');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
@@ -350,7 +349,7 @@
         }
 
         if (checkDraw()) {
-          gameActive = false;
+          isGameActive = false;
           updateStatus('Draw!');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
@@ -409,13 +408,13 @@
       }
 
       function highlightWin(combo) {
-        combo.forEach(function (i) {
+        combo.forEach(i => {
           cellEls[i].classList.add('ttt__cell--win');
         });
       }
 
       function checkDraw() {
-        return board.every(function (cell) {
+        return board.every(cell => {
           return cell;
         });
       }
@@ -427,9 +426,9 @@
       function resetGame() {
         board = Array(9).fill('');
         currentPlayer = 'X';
-        gameActive = true;
+        isGameActive = true;
 
-        cellEls.forEach(function (cell, i) {
+        cellEls.forEach((cell, i) => {
           cell.textContent = '';
           cell.classList.remove('ttt__cell--x');
           cell.classList.remove('ttt__cell--o');
@@ -462,7 +461,7 @@
       }
 
       function render() {
-        cellEls.forEach(function (cell, i) {
+        cellEls.forEach((cell, i) => {
           const val = board[i];
 
           cell.textContent = val;
