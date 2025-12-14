@@ -46,9 +46,13 @@
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-        sans-serif;
-      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      font-family: system-ui, -apple-system,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(
+        180deg,
+        var(--bg),
+        #071021 120%
+      );
       display: flex;
       align-items: center;
       justify-content: center;
@@ -60,7 +64,11 @@
     /* When in light theme make some text colors darker for contrast */
     html[data-theme="light"] body {
       color: #0f1724;
-      background: linear-gradient(180deg, var(--bg), #f1f5f9 120%);
+      background: linear-gradient(
+        180deg,
+        var(--bg),
+        #f1f5f9 120%
+      );
     }
 
     .ttt__container {
@@ -74,12 +82,17 @@
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
-      transition: background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      transition: background 220ms ease, color 220ms ease,
+        box-shadow 220ms ease;
     }
 
     /* Slightly different container treatment for light theme */
     html[data-theme="light"] .ttt__container {
-      background: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(2,6,23,0.01));
+      background: linear-gradient(
+        180deg,
+        rgba(2,6,23,0.02),
+        rgba(2,6,23,0.01)
+      );
       box-shadow: 0 6px 20px rgba(2,6,23,0.06);
     }
 
@@ -133,7 +146,8 @@
       font-weight: 700;
       color: var(--muted);
       cursor: pointer;
-      transition: transform 0.08s ease, background 0.12s, border-color 180ms ease, color 180ms ease;
+      transition: transform 0.08s ease, background 0.12s,
+        border-color 180ms ease, color 180ms ease;
       user-select: none; /* prevent text selection on mark */
     }
 
@@ -191,7 +205,8 @@
       padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+      transition: background 160ms ease, border-color 160ms ease,
+        color 160ms ease;
     }
 
     /* Lighter button borders in light theme */
@@ -222,8 +237,17 @@
       border-radius: 8px;
     }
 
+    /* Theme toggle wrapper moved to CSS (no inline styles) */
+    .ttt__theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: 12px;
+    }
+
     @media (max-width: 420px) {
-      /* On small screens let the clamp handle sizing, but slightly reduce max viewport factor */
+      /* On small screens let the clamp handle sizing, but slightly reduce
+         max viewport factor */
       :root {
         --mark-vw-factor: 18vw;
       }
@@ -239,9 +263,16 @@
     <header>
       <h1>Tic Tac Toe</h1>
 
-      <!-- Theme toggle button: accessible, keyboard focusable -->
-      <div style="display:flex;align-items:center;gap:12px;margin-left:12px;">
-        <button id="themeToggle" class="ttt__btn" aria-pressed="false" title="Toggle light/dark theme">🌙</button>
+      <!-- Theme toggle button: accessible, keyboard focusable. -->
+      <div class="ttt__theme-toggle">
+        <button
+          id="themeToggle"
+          class="ttt__btn ttt__theme-toggle__btn"
+          aria-label="Toggle light/dark theme"
+          title="Toggle light/dark theme"
+        >
+          
+        </button>
       </div>
 
       <div class="ttt__status">
@@ -343,9 +374,7 @@
 
   <script>
     (function () {
-      const cellEls = Array.from(
-        document.querySelectorAll('.ttt__cell')
-      );
+      const cellEls = Array.from(document.querySelectorAll('.ttt__cell'));
 
       const statusEl = document.getElementById('statusMsg');
       const newGameBtn = document.getElementById('newGame');
@@ -382,7 +411,7 @@
           themeToggleBtn.setAttribute('aria-label', 'Switch to dark theme');
           try { localStorage.setItem(THEME_KEY, 'light'); } catch (e) {}
         } else {
-          document.documentElement.setAttribute('data-theme', '');
+          document.documentElement.removeAttribute('data-theme');
           themeToggleBtn.textContent = '🌙';
           themeToggleBtn.setAttribute('aria-pressed', 'false');
           themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
@@ -396,11 +425,7 @@
       }
 
       function getSavedTheme() {
-        try {
-          return localStorage.getItem(THEME_KEY);
-        } catch (e) {
-          return null;
-        }
+        try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
       }
 
       function getPreferredThemeFromSystem() {
@@ -414,7 +439,8 @@
       }
 
       function toggleTheme() {
-        const current = (document.documentElement.getAttribute('data-theme') === 'light') ? 'light' : 'dark';
+        const current = (document.documentElement.getAttribute('data-theme') === 'light')
+          ? 'light' : 'dark';
         const next = (current === 'light') ? 'dark' : 'light';
         applyTheme(next);
       }
@@ -424,14 +450,20 @@
         const initial = saved || getPreferredThemeFromSystem();
         applyTheme(initial);
 
-        // If the user didn't choose explicitly, respond to OS changes
+        // If the user didn't choose explicitly, respond to OS changes.
         try {
           const mq = window.matchMedia('(prefers-color-scheme: dark)');
-          mq.addEventListener && mq.addEventListener('change', (e) => {
+          const mqHandler = (e) => {
             if (!getSavedTheme()) {
               applyTheme(e.matches ? 'dark' : 'light');
             }
-          });
+          };
+
+          if (mq.addEventListener) {
+            mq.addEventListener('change', mqHandler);
+          } else if (mq.addListener) {
+            mq.addListener(mqHandler);
+          }
         } catch (e) {}
 
         themeToggleBtn.addEventListener('click', toggleTheme);
@@ -448,9 +480,7 @@
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
 
-        updateStatus(
-          'Player ' + currentPlayer + "'s turn"
-        );
+        updateStatus('Player ' + currentPlayer + "'s turn");
 
         render();
       }
@@ -465,13 +495,8 @@
       function onCellClick(e) {
         const idx = Number(e.currentTarget.dataset.index);
 
-        if (!isGameActive) {
-          return;
-        }
-
-        if (board[idx]) {
-          return;
-        }
+        if (!isGameActive) return;
+        if (board[idx]) return;
 
         board[idx] = currentPlayer;
 
@@ -495,9 +520,7 @@
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
-        updateStatus(
-          'Player ' + currentPlayer + "'s turn"
-        );
+        updateStatus('Player ' + currentPlayer + "'s turn");
       }
 
       function updateCellUI(idx) {
@@ -509,16 +532,13 @@
         cell.classList.remove('ttt__cell--o');
 
         if (board[idx]) {
-          cell.classList.add(
-            'ttt__cell--' + board[idx].toLowerCase()
-          );
+          cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
         }
 
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
 
-        cell.setAttribute(
-          'aria-label',
+        cell.setAttribute('aria-label',
           'Row ' + row + ', Column ' + col + ', ' + board[idx]
         );
 
@@ -610,16 +630,14 @@
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
 
-            cell.setAttribute(
-              'aria-label',
+            cell.setAttribute('aria-label',
               'Row ' + row + ', Column ' + col + ', ' + val
             );
           } else {
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
 
-            cell.setAttribute(
-              'aria-label',
+            cell.setAttribute('aria-label',
               'Row ' + row + ', Column ' + col + ', empty'
             );
           }
