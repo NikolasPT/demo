@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe</title>
+  <style>
+    body { background: #fafafa; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    h1 { margin-bottom: 0.5em; }
+    #game { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 10px; }
+    .cell {
+      width: 80px;
+      height: 80px;
+      font-size: 2em;
+      color: #333;
+      background: #fff;
+      border: 2px solid #888;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: background 0.2s;
+    }
+    .cell:disabled {
+      cursor: not-allowed;
+      background: #f0f0f0;
+    }
+    #status { margin: 1em 0; font-size: 1.15em; }
+    #reset { margin-top: 0.5em; padding: 0.5em 1.5em; font-size: 1em; border-radius: 6px; background: #1996e1; color: #fff; border: none; cursor: pointer; }
+    #reset:hover { background: #1168af; }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div id="status">Player X's turn</div>
+  <div id="game"></div>
+  <button id="reset">Restart Game</button>
+  <script>
+    const gameEl = document.getElementById('game');
+    const statusEl = document.getElementById('status');
+    const resetBtn = document.getElementById('reset');
+    let board, currentPlayer, gameActive;
+    
+    function createBoard() {
+      board = Array(9).fill('');
+      gameActive = true;
+      currentPlayer = 'X';
+      gameEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('button');
+        cell.className = 'cell';
+        cell.setAttribute('data-index', i);
+        cell.addEventListener('click', handleCellClick);
+        gameEl.appendChild(cell);
+      }
+      setStatus(`Player ${currentPlayer}'s turn`);
+    }
+    
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function handleCellClick(event) {
+      const i = +event.target.getAttribute('data-index');
+      if (!gameActive || board[i] !== '') return;
+      board[i] = currentPlayer;
+      event.target.textContent = currentPlayer;
+      event.target.disabled = true;
+
+      if (checkWin(currentPlayer)) {
+        setStatus(`Player ${currentPlayer} wins!`);
+        gameActive = false;
+        disableAll();
+        return;
+      }
+      if (board.every(cell => cell)) {
+        setStatus('Draw!');
+        gameActive = false;
+        return;
+      }
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      setStatus(`Player ${currentPlayer}'s turn`);
+    }
+
+    function checkWin(p) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8], // rows
+        [0,3,6],[1,4,7],[2,5,8], // cols
+        [0,4,8],[2,4,6]          // diags
+      ];
+      return wins.some(combo => combo.every(i => board[i] === p));
+    }
+
+    function disableAll() {
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach(cell => cell.disabled = true);
+    }
+
+    resetBtn.onclick = createBoard;
+    createBoard();
+  </script>
+</body>
+</html>
