@@ -5,44 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tic Tac Toe</title>
   <style>
-    body { background: #fafafa; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    :root {
+      --color-bg: #fafafa;
+      --color-board: #fff;
+      --color-border: #888;
+      --color-x: #e94f37;
+      --color-o: #1d84b5;
+      --color-disabled: #f0f0f0;
+      --color-text: #222;
+      --color-status: #555;
+      --color-btn-bg: #1996e1;
+      --color-btn-bg-hover: #1168af;
+      --color-btn-fg: #fff;
+      --color-win: #43a047;
+    }
+    body.dark-mode {
+      --color-bg: #21232a;
+      --color-board: #292b36;
+      --color-border: #666b7a;
+      --color-x: #f44336;
+      --color-o: #00bfae;
+      --color-disabled: #35363d;
+      --color-text: #ebebeb;
+      --color-status: #aad7f9;
+      --color-btn-bg: #0074d9;
+      --color-btn-bg-hover: #005fa3;
+      --color-btn-fg: #ebebeb;
+      --color-win: #80ea6e;
+    }
+    body {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      transition: background 0.5s, color 0.5s;
+    }
     h1 { margin-bottom: 0.5em; }
     #game { display: grid; grid-template-columns: repeat(3, 80px); grid-gap: 10px; }
     .cell {
       width: 80px;
       height: 80px;
       font-size: 2em;
-      color: #333;
-      background: #fff;
-      border: 2px solid #888;
+      color: var(--color-text);
+      background: var(--color-board);
+      border: 2px solid var(--color-border);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       outline: none;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s, border 0.2s;
+      font-weight: bold;
+    }
+    .cell[data-value="X"] {
+      color: var(--color-x);
+      text-shadow: 0 2px 10px rgba(233,79,55,0.14);
+    }
+    .cell[data-value="O"] {
+      color: var(--color-o);
+      text-shadow: 0 2px 10px rgba(29,132,181,0.14);
     }
     .cell:disabled {
       cursor: not-allowed;
-      background: #f0f0f0;
+      background: var(--color-disabled);
+      color: var(--color-text);
+      opacity: 0.65;
     }
-    #status { margin: 1em 0; font-size: 1.15em; }
-    #reset { margin-top: 0.5em; padding: 0.5em 1.5em; font-size: 1em; border-radius: 6px; background: #1996e1; color: #fff; border: none; cursor: pointer; }
-    #reset:hover { background: #1168af; }
+    #status {
+      margin: 1em 0;
+      font-size: 1.15em;
+      color: var(--color-status);
+    }
+    #reset, #toggle-dark {
+      margin-top: 0.5em;
+      padding: 0.5em 1.5em;
+      font-size: 1em;
+      border-radius: 6px;
+      background: var(--color-btn-bg);
+      color: var(--color-btn-fg);
+      border: none;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background 0.2s, color 0.2s;
+    }
+    #reset:hover, #toggle-dark:hover {
+      background: var(--color-btn-bg-hover);
+    }
+    #dark-icon {
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+      margin-left: 4px;
+      filter: brightness(0) invert(1);
+    }
+    body:not(.dark-mode) #dark-icon { filter: none; }
+    /* Win highlight (if needed later on) */
+    .cell.win {
+      background: var(--color-win);
+      color: var(--color-board);
+    }
   </style>
 </head>
 <body>
   <h1>Tic Tac Toe</h1>
   <div id="status">Player X's turn</div>
   <div id="game"></div>
-  <button id="reset">Restart Game</button>
+  <div style="display:flex;justify-content:center;align-items:center;">
+    <button id="reset">Restart Game</button>
+    <button id="toggle-dark" title="Toggle dark mode">
+      <span id="dark-label">Dark Mode</span>
+      <svg id="dark-icon" viewBox="0 0 24 24"><path d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 17a5 5 0 1 1 0-10a7.002 7.002 0 0 0 6.938 7.99A9 9 0 1 1 12 2c.649 0 1.28.067 1.893.193C12.73 2.06 12.369 2 12 2zm7.07 17.07a1 1 0 0 1-1.414 0l-1.415-1.414a1 1 0 1 1 1.415-1.415l1.414 1.415a1 1 0 0 1 0 1.414zm-14.14 0a1 1 0 0 1 0-1.414l1.415-1.415a1 1 0 0 1 1.414 1.415l-1.414 1.414a1 1 0 0 1-1.415 0zM4 13a1 1 0 1 1 0-2H2a1 1 0 0 1 0-2h2a1 1 0 1 1 0 2zm16 0a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2h-2zM5.05 5.05A1 1 0 1 1 6.465 6.465L5.05 7.88a1 1 0 0 1-1.414-1.415zm12.02 12.02a1 1 0 1 1 1.415-1.414l1.414 1.415a1 1 0 0 1-1.414 1.415z"/></svg>
+    </button>
+  </div>
   <script>
     const gameEl = document.getElementById('game');
     const statusEl = document.getElementById('status');
     const resetBtn = document.getElementById('reset');
+    const toggleDarkBtn = document.getElementById('toggle-dark');
     let board, currentPlayer, gameActive;
-    
+
+    function saveTheme(isDark) {
+      localStorage.setItem('ttt-dark-mode', isDark ? '1' : '0');
+    }
+    function loadTheme() {
+      return localStorage.getItem('ttt-dark-mode') === '1';
+    }
+    function setDarkMode(enabled) {
+      document.body.classList.toggle('dark-mode', enabled);
+      document.getElementById('dark-label').textContent = enabled ? 'Light Mode' : 'Dark Mode';
+    }
+    // Initialize dark mode based on user/historic preference
+    setDarkMode(loadTheme());
+    toggleDarkBtn.onclick = () => {
+      const nowDark = !document.body.classList.contains('dark-mode');
+      setDarkMode(nowDark);
+      saveTheme(nowDark);
+    };
+
     function createBoard() {
       board = Array(9).fill('');
       gameActive = true;
@@ -52,12 +157,13 @@
         const cell = document.createElement('button');
         cell.className = 'cell';
         cell.setAttribute('data-index', i);
+        cell.setAttribute('data-value', '');
         cell.addEventListener('click', handleCellClick);
         gameEl.appendChild(cell);
       }
       setStatus(`Player ${currentPlayer}'s turn`);
     }
-    
+
     function setStatus(msg) {
       statusEl.textContent = msg;
     }
@@ -67,12 +173,14 @@
       if (!gameActive || board[i] !== '') return;
       board[i] = currentPlayer;
       event.target.textContent = currentPlayer;
+      event.target.setAttribute('data-value', currentPlayer);
       event.target.disabled = true;
 
       if (checkWin(currentPlayer)) {
         setStatus(`Player ${currentPlayer} wins!`);
         gameActive = false;
         disableAll();
+        highlightWinComb(currentPlayer);
         return;
       }
       if (board.every(cell => cell)) {
@@ -93,6 +201,25 @@
       return wins.some(combo => combo.every(i => board[i] === p));
     }
 
+    function getWinCombination(p) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return wins.find(combo => combo.every(i => board[i] === p));
+    }
+
+    function highlightWinComb(p) {
+      const comb = getWinCombination(p);
+      if (comb) {
+        const cells = document.querySelectorAll('.cell');
+        comb.forEach(i => {
+          cells[i].classList.add('win');
+        });
+      }
+    }
+
     function disableAll() {
       const cells = document.querySelectorAll('.cell');
       cells.forEach(cell => cell.disabled = true);
@@ -101,5 +228,6 @@
     resetBtn.onclick = createBoard;
     createBoard();
   </script>
+  <!-- Now with color styles + dark mode. For details, see issue #3. -->
 </body>
 </html>
