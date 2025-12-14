@@ -271,7 +271,7 @@
           aria-label="Toggle light/dark theme"
           title="Toggle light/dark theme"
         >
-          \uD83C\uDF19
+          🌙
         </button>
       </div>
 
@@ -412,7 +412,7 @@
           try { localStorage.setItem(THEME_KEY, 'light'); } catch (e) {}
         } else {
           document.documentElement.removeAttribute('data-theme');
-          themeToggleBtn.textContent = '\uD83C\uDF19';
+          themeToggleBtn.textContent = '🌙';
           themeToggleBtn.setAttribute('aria-pressed', 'false');
           themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
           try { localStorage.setItem(THEME_KEY, 'dark'); } catch (e) {}
