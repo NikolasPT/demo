@@ -24,6 +24,17 @@
       --mark-max: 7rem;
     }
 
+    /* Light theme overrides: applied when html[data-theme="light"] is set */
+    html[data-theme="light"] {
+      --bg: #f8fafc; /* very light gray */
+      --accent: #7c3aed; /* retain accent */
+      --x: #b91c1c; /* darker red for contrast */
+      --o: #0ea5a4; /* teal */
+      --muted: #475569; /* slate for muted text */
+      --win-bg: rgba(16,185,129,0.08);
+      color-scheme: light;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -35,14 +46,29 @@
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
-        sans-serif;
-      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      font-family: system-ui, -apple-system,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(
+        180deg,
+        var(--bg),
+        #071021 120%
+      );
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       color: #e6eef8;
+      transition: background 220ms ease, color 220ms ease;
+    }
+
+    /* When in light theme make some text colors darker for contrast */
+    html[data-theme="light"] body {
+      color: #0f1724;
+      background: linear-gradient(
+        180deg,
+        var(--bg),
+        #f1f5f9 120%
+      );
     }
 
     .ttt__container {
@@ -56,6 +82,18 @@
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      transition: background 220ms ease, color 220ms ease,
+        box-shadow 220ms ease;
+    }
+
+    /* Slightly different container treatment for light theme */
+    html[data-theme="light"] .ttt__container {
+      background: linear-gradient(
+        180deg,
+        rgba(2,6,23,0.02),
+        rgba(2,6,23,0.01)
+      );
+      box-shadow: 0 6px 20px rgba(2,6,23,0.06);
     }
 
     header {
@@ -108,8 +146,15 @@
       font-weight: 700;
       color: var(--muted);
       cursor: pointer;
-      transition: transform 0.08s ease, background 0.12s;
+      transition: transform 0.08s ease, background 0.12s,
+        border-color 180ms ease, color 180ms ease;
       user-select: none; /* prevent text selection on mark */
+    }
+
+    /* When in light theme adjust borders so they are visible */
+    html[data-theme="light"] .ttt__cell {
+      border: 1px solid rgba(2,6,23,0.06);
+      background: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
     }
 
     /* If SVG marks are added later, make them scale nicely inside the cell */
@@ -160,6 +205,13 @@
       padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease,
+        color 160ms ease;
+    }
+
+    /* Lighter button borders in light theme */
+    html[data-theme="light"] .ttt__btn {
+      border-color: rgba(2,6,23,0.06);
     }
 
     .ttt__btn--primary {
@@ -185,8 +237,17 @@
       border-radius: 8px;
     }
 
+    /* Theme toggle wrapper moved to CSS (no inline styles) */
+    .ttt__theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: 12px;
+    }
+
     @media (max-width: 420px) {
-      /* On small screens let the clamp handle sizing, but slightly reduce max viewport factor */
+      /* On small screens let the clamp handle sizing, but slightly reduce
+         max viewport factor */
       :root {
         --mark-vw-factor: 18vw;
       }
@@ -201,6 +262,19 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
+
+      <!-- Theme toggle button: accessible, keyboard focusable. -->
+      <div class="ttt__theme-toggle">
+        <button
+          id="themeToggle"
+          class="ttt__btn ttt__theme-toggle__btn"
+          aria-label="Toggle light/dark theme"
+          title="Toggle light/dark theme"
+        >
+          🌙
+        </button>
+      </div>
+
       <div class="ttt__status">
         <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
           Player X's turn
@@ -300,9 +374,7 @@
 
   <script>
     (function () {
-      const cellEls = Array.from(
-        document.querySelectorAll('.ttt__cell')
-      );
+      const cellEls = Array.from(document.querySelectorAll('.ttt__cell'));
 
       const statusEl = document.getElementById('statusMsg');
       const newGameBtn = document.getElementById('newGame');
@@ -310,6 +382,9 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const themeToggleBtn = document.getElementById('themeToggle');
+
+      const THEME_KEY = 'ttt-theme';
 
       const WINNING_COMBOS = [
         [0, 1, 2],
@@ -327,7 +402,76 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      /* Theme management */
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          themeToggleBtn.textContent = '☀️';
+          themeToggleBtn.setAttribute('aria-pressed', 'true');
+          themeToggleBtn.setAttribute('aria-label', 'Switch to dark theme');
+          try { localStorage.setItem(THEME_KEY, 'light'); } catch (e) {}
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          themeToggleBtn.textContent = '🌙';
+          themeToggleBtn.setAttribute('aria-pressed', 'false');
+          themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
+          try { localStorage.setItem(THEME_KEY, 'dark'); } catch (e) {}
+        }
+
+        // Also set the color-scheme property directly for some browsers
+        try {
+          document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
+        } catch (e) {}
+      }
+
+      function getSavedTheme() {
+        try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+      }
+
+      function getPreferredThemeFromSystem() {
+        try {
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+          }
+        } catch (e) {}
+
+        return 'dark';
+      }
+
+      function toggleTheme() {
+        const current = (document.documentElement.getAttribute('data-theme') === 'light')
+          ? 'light' : 'dark';
+        const next = (current === 'light') ? 'dark' : 'light';
+        applyTheme(next);
+      }
+
+      function initTheme() {
+        const saved = getSavedTheme();
+        const initial = saved || getPreferredThemeFromSystem();
+        applyTheme(initial);
+
+        // If the user didn't choose explicitly, respond to OS changes.
+        try {
+          const mq = window.matchMedia('(prefers-color-scheme: dark)');
+          const mqHandler = (e) => {
+            if (!getSavedTheme()) {
+              applyTheme(e.matches ? 'dark' : 'light');
+            }
+          };
+
+          if (mq.addEventListener) {
+            mq.addEventListener('change', mqHandler);
+          } else if (mq.addListener) {
+            mq.addListener(mqHandler);
+          }
+        } catch (e) {}
+
+        themeToggleBtn.addEventListener('click', toggleTheme);
+      }
+
       function init() {
+        initTheme();
+
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
@@ -336,9 +480,7 @@
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
 
-        updateStatus(
-          'Player ' + currentPlayer + "'s turn"
-        );
+        updateStatus('Player ' + currentPlayer + "'s turn");
 
         render();
       }
@@ -353,13 +495,8 @@
       function onCellClick(e) {
         const idx = Number(e.currentTarget.dataset.index);
 
-        if (!isGameActive) {
-          return;
-        }
-
-        if (board[idx]) {
-          return;
-        }
+        if (!isGameActive) return;
+        if (board[idx]) return;
 
         board[idx] = currentPlayer;
 
@@ -383,9 +520,7 @@
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
-        updateStatus(
-          'Player ' + currentPlayer + "'s turn"
-        );
+        updateStatus('Player ' + currentPlayer + "'s turn");
       }
 
       function updateCellUI(idx) {
@@ -397,9 +532,7 @@
         cell.classList.remove('ttt__cell--o');
 
         if (board[idx]) {
-          cell.classList.add(
-            'ttt__cell--' + board[idx].toLowerCase()
-          );
+          cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
         }
 
         const row = Math.floor(idx / 3) + 1;
