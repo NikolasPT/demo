@@ -25,13 +25,14 @@
     }
 
     /* Light theme overrides: applied when html[data-theme="light"] is set */
+    /* Increased contrast for light theme to improve board readability (fixes #12) */
     html[data-theme="light"] {
-      --bg: #f8fafc; /* very light gray */
+      --bg: #eef2f7; /* slightly darker than #f8fafc for better contrast */
       --accent: #7c3aed; /* retain accent */
       --x: #b91c1c; /* darker red for contrast */
       --o: #0ea5a4; /* teal */
-      --muted: #475569; /* slate for muted text */
-      --win-bg: rgba(16,185,129,0.08);
+      --muted: #334155; /* stronger muted color for legibility */
+      --win-bg: rgba(16,185,129,0.10); /* slightly stronger highlight */
       color-scheme: light;
     }
 
@@ -67,7 +68,7 @@
       background: linear-gradient(
         180deg,
         var(--bg),
-        #f1f5f9 120%
+        #e2e8f0 120%
       );
     }
 
@@ -90,10 +91,11 @@
     html[data-theme="light"] .ttt__container {
       background: linear-gradient(
         180deg,
-        rgba(2,6,23,0.02),
-        rgba(2,6,23,0.01)
+        rgba(15,23,36,0.02),
+        rgba(15,23,36,0.01)
       );
-      box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+      border: 1px solid rgba(15,23,36,0.06);
+      box-shadow: 0 6px 18px rgba(15,23,36,0.06);
     }
 
     header {
@@ -153,8 +155,8 @@
 
     /* When in light theme adjust borders so they are visible */
     html[data-theme="light"] .ttt__cell {
-      border: 1px solid rgba(2,6,23,0.06);
-      background: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
+      border: 1px solid rgba(15,23,36,0.12);
+      background: linear-gradient(180deg, rgba(15,23,36,0.03), rgba(15,23,36,0.01));
     }
 
     /* If SVG marks are added later, make them scale nicely inside the cell */
@@ -211,7 +213,7 @@
 
     /* Lighter button borders in light theme */
     html[data-theme="light"] .ttt__btn {
-      border-color: rgba(2,6,23,0.06);
+      border-color: rgba(15,23,36,0.08);
     }
 
     .ttt__btn--primary {
@@ -271,7 +273,7 @@
           aria-label="Toggle light/dark theme"
           title="Toggle light/dark theme"
         >
-          🌙
+          \uD83C\uDF19
         </button>
       </div>
 
@@ -412,7 +414,7 @@
           try { localStorage.setItem(THEME_KEY, 'light'); } catch (e) {}
         } else {
           document.documentElement.removeAttribute('data-theme');
-          themeToggleBtn.textContent = '🌙';
+          themeToggleBtn.textContent = '\uD83C\uDF19';
           themeToggleBtn.setAttribute('aria-pressed', 'false');
           themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
           try { localStorage.setItem(THEME_KEY, 'dark'); } catch (e) {}
