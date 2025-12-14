@@ -271,7 +271,7 @@
           aria-label="Toggle light/dark theme"
           title="Toggle light/dark theme"
         >
-          
+          🌙
         </button>
       </div>
 
@@ -538,7 +538,8 @@
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
 
-        cell.setAttribute('aria-label',
+        cell.setAttribute(
+          'aria-label',
           'Row ' + row + ', Column ' + col + ', ' + board[idx]
         );
 
@@ -630,14 +631,16 @@
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
 
-            cell.setAttribute('aria-label',
+            cell.setAttribute(
+              'aria-label',
               'Row ' + row + ', Column ' + col + ', ' + val
             );
           } else {
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
 
-            cell.setAttribute('aria-label',
+            cell.setAttribute(
+              'aria-label',
               'Row ' + row + ', Column ' + col + ', empty'
             );
           }
