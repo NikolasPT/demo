@@ -1,5 +1,1 @@
-# Changelog
-
-## Unreleased
-
-- Improve light-theme contrast so board is more visible (fixes #12)
+REMOVED: changelog entry moved into tic-tac-toe.html to comply with single-file requirement (fixes #12)
