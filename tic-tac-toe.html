@@ -26,12 +26,12 @@
 
     /* Light theme overrides: applied when html[data-theme="light"] is set */
     html[data-theme="light"] {
-      --bg: #f8fafc; /* very light gray */
+      --bg: #e6eef8; /* slightly darker light background to reduce glare */
       --accent: #7c3aed; /* retain accent */
       --x: #b91c1c; /* darker red for contrast */
       --o: #0ea5a4; /* teal */
-      --muted: #475569; /* slate for muted text */
-      --win-bg: rgba(16,185,129,0.08);
+      --muted: #334155; /* darker slate for improved readability */
+      --win-bg: rgba(16,185,129,0.12); /* slightly stronger win highlight */
       color-scheme: light;
     }
 
@@ -67,7 +67,7 @@
       background: linear-gradient(
         180deg,
         var(--bg),
-        #f1f5f9 120%
+        #e6eef8 120%
       );
     }
 
@@ -90,10 +90,10 @@
     html[data-theme="light"] .ttt__container {
       background: linear-gradient(
         180deg,
-        rgba(2,6,23,0.02),
-        rgba(2,6,23,0.01)
+        rgba(2,6,23,0.04),
+        rgba(2,6,23,0.02)
       );
-      box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+      box-shadow: 0 8px 26px rgba(2,6,23,0.08);
     }
 
     header {
@@ -153,8 +153,8 @@
 
     /* When in light theme adjust borders so they are visible */
     html[data-theme="light"] .ttt__cell {
-      border: 1px solid rgba(2,6,23,0.06);
-      background: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
+      border: 1px solid rgba(2,6,23,0.12);
+      background: linear-gradient(180deg, rgba(2,6,23,0.04), rgba(2,6,23,0.02));
     }
 
     /* If SVG marks are added later, make them scale nicely inside the cell */
@@ -209,9 +209,9 @@
         color 160ms ease;
     }
 
-    /* Lighter button borders in light theme */
+    /* Stronger button borders in light theme for visibility */
     html[data-theme="light"] .ttt__btn {
-      border-color: rgba(2,6,23,0.06);
+      border-color: rgba(2,6,23,0.12);
     }
 
     .ttt__btn--primary {
