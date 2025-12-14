@@ -12,35 +12,13 @@
       --o: #06b6d4;
       --muted: #94a3b8;
       --win-bg: rgba(28,197,138,0.12);
-      color-scheme: dark;
-
-      /* Mark sizing variables (responsive):
-         --mark-min: minimum size (rem)
-         --mark-vw-factor: responsive factor (based on viewport)
-         --mark-max: maximum size (rem)
-      */
-      --mark-min: 2rem;
-      --mark-vw-factor: 10vw;
-      --mark-max: 7rem;
-    }
-
-    /* Light theme overrides: applied when html[data-theme="light"] is set */
-    html[data-theme="light"] {
-      --bg: #e6eef8; /* slightly darker light background to reduce glare */
-      --accent: #7c3aed; /* retain accent */
-      --x: #b91c1c; /* darker red for contrast */
-      --o: #0ea5a4; /* teal */
-      --muted: #334155; /* darker slate for improved readability */
-      --win-bg: rgba(16,185,129,0.12); /* slightly stronger win highlight */
-      color-scheme: light;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html,
-    body {
+    html, body {
       height: 100%;
     }
 
@@ -61,21 +39,10 @@
       transition: background 220ms ease, color 220ms ease;
     }
 
-    /* When in light theme make some text colors darker for contrast */
-    html[data-theme="light"] body {
-      color: #0f1724;
-      background: linear-gradient(
-        180deg,
-        var(--bg),
-        #e6eef8 120%
-      );
-    }
-
     .ttt__container {
       width: 100%;
       max-width: 720px;
-      background: linear-gradient(
-        180deg,
+      background: linear-gradient(180deg,
         rgba(255,255,255,0.02),
         rgba(255,255,255,0.01)
       );
@@ -84,16 +51,6 @@
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
       transition: background 220ms ease, color 220ms ease,
         box-shadow 220ms ease;
-    }
-
-    /* Slightly different container treatment for light theme */
-    html[data-theme="light"] .ttt__container {
-      background: linear-gradient(
-        180deg,
-        rgba(2,6,23,0.04),
-        rgba(2,6,23,0.02)
-      );
-      box-shadow: 0 8px 26px rgba(2,6,23,0.08);
     }
 
     header {
@@ -140,8 +97,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Make X/O scale responsively to the cell and viewport using clamp */
-      font-size: clamp(var(--mark-min), var(--mark-vw-factor), var(--mark-max));
+      font-size: clamp(2rem, 10vw, 7rem);
       line-height: 1;
       font-weight: 700;
       color: var(--muted);
@@ -151,13 +107,7 @@
       user-select: none; /* prevent text selection on mark */
     }
 
-    /* When in light theme adjust borders so they are visible */
-    html[data-theme="light"] .ttt__cell {
-      border: 1px solid rgba(2,6,23,0.12);
-      background: linear-gradient(180deg, rgba(2,6,23,0.04), rgba(2,6,23,0.02));
-    }
-
-    /* If SVG marks are added later, make them scale nicely inside the cell */
+    /* If SVG marks are added later, ensure they scale nicely inside the cell */
     .ttt__cell svg {
       width: 75%;
       height: 75%;
@@ -209,11 +159,6 @@
         color 160ms ease;
     }
 
-    /* Stronger button borders in light theme for visibility */
-    html[data-theme="light"] .ttt__btn {
-      border-color: rgba(2,6,23,0.12);
-    }
-
     .ttt__btn--primary {
       background: linear-gradient(90deg, var(--accent), #4f46e5);
       border: none;
@@ -236,45 +181,12 @@
       padding: 6px 8px;
       border-radius: 8px;
     }
-
-    /* Theme toggle wrapper moved to CSS (no inline styles) */
-    .ttt__theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-left: 12px;
-    }
-
-    @media (max-width: 420px) {
-      /* On small screens let the clamp handle sizing, but slightly reduce
-         max viewport factor */
-      :root {
-        --mark-vw-factor: 18vw;
-      }
-
-      h1 {
-        font-size: 16px;
-      }
-    }
   </style>
 </head>
 <body>
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-
-      <!-- Theme toggle button: accessible, keyboard focusable. -->
-      <div class="ttt__theme-toggle">
-        <button
-          id="themeToggle"
-          class="ttt__btn ttt__theme-toggle__btn"
-          aria-label="Toggle light/dark theme"
-          title="Toggle light/dark theme"
-        >
-          🌙
-        </button>
-      </div>
-
       <div class="ttt__status">
         <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
           Player X's turn
@@ -382,9 +294,6 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
-      const themeToggleBtn = document.getElementById('themeToggle');
-
-      const THEME_KEY = 'ttt-theme';
 
       const WINNING_COMBOS = [
         [0, 1, 2],
@@ -401,89 +310,6 @@
       let currentPlayer = 'X';
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
-
-      /* Theme management */
-      function applyTheme(theme) {
-        if (theme === 'light') {
-          document.documentElement.setAttribute('data-theme', 'light');
-          themeToggleBtn.textContent = '☀️';
-          themeToggleBtn.setAttribute('aria-pressed', 'true');
-          themeToggleBtn.setAttribute('aria-label', 'Switch to dark theme');
-          try { localStorage.setItem(THEME_KEY, 'light'); } catch (e) {}
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-          themeToggleBtn.textContent = '🌙';
-          themeToggleBtn.setAttribute('aria-pressed', 'false');
-          themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
-          try { localStorage.setItem(THEME_KEY, 'dark'); } catch (e) {}
-        }
-
-        // Also set the color-scheme property directly for some browsers
-        try {
-          document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
-        } catch (e) {}
-      }
-
-      function getSavedTheme() {
-        try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
-      }
-
-      function getPreferredThemeFromSystem() {
-        try {
-          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            return 'light';
-          }
-        } catch (e) {}
-
-        return 'dark';
-      }
-
-      function toggleTheme() {
-        const current = (document.documentElement.getAttribute('data-theme') === 'light')
-          ? 'light' : 'dark';
-        const next = (current === 'light') ? 'dark' : 'light';
-        applyTheme(next);
-      }
-
-      function initTheme() {
-        const saved = getSavedTheme();
-        const initial = saved || getPreferredThemeFromSystem();
-        applyTheme(initial);
-
-        // If the user didn't choose explicitly, respond to OS changes.
-        try {
-          const mq = window.matchMedia('(prefers-color-scheme: dark)');
-          const mqHandler = (e) => {
-            if (!getSavedTheme()) {
-              applyTheme(e.matches ? 'dark' : 'light');
-            }
-          };
-
-          if (mq.addEventListener) {
-            mq.addEventListener('change', mqHandler);
-          } else if (mq.addListener) {
-            mq.addListener(mqHandler);
-          }
-        } catch (e) {}
-
-        themeToggleBtn.addEventListener('click', toggleTheme);
-      }
-
-      function init() {
-        initTheme();
-
-        cellEls.forEach(cell => {
-          cell.addEventListener('click', onCellClick);
-          cell.addEventListener('keydown', onCellKeyDown);
-        });
-
-        newGameBtn.addEventListener('click', resetGame);
-        resetScoresBtn.addEventListener('click', resetScores);
-
-        updateStatus('Player ' + currentPlayer + "'s turn");
-
-        render();
-      }
 
       function onCellKeyDown(e) {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -504,7 +330,7 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + currentPlayer + ' wins!');
+          statusEl.textContent = 'Player ' + currentPlayer + ' wins!';
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
           return;
@@ -512,20 +338,18 @@
 
         if (checkDraw()) {
           isGameActive = false;
-          updateStatus('Draw!');
+          statusEl.textContent = 'Draw!';
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
           return;
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-        updateStatus('Player ' + currentPlayer + "'s turn");
+        statusEl.textContent = "Player " + currentPlayer + "'s turn";
       }
 
       function updateCellUI(idx) {
         const cell = cellEls[idx];
-
         cell.textContent = board[idx];
 
         cell.classList.remove('ttt__cell--x');
@@ -537,48 +361,33 @@
 
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-
-        cell.setAttribute(
-          'aria-label',
-          'Row ' + row + ', Column ' + col + ', ' + board[idx]
-        );
-
+        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
         cell.setAttribute('aria-pressed', 'true');
       }
 
       function checkWin() {
         for (const combo of WINNING_COMBOS) {
-          const a = combo[0];
-          const b = combo[1];
-          const c = combo[2];
-
-          if (
-            board[a] &&
-            board[a] === board[b] &&
-            board[a] === board[c]
-          ) {
+          const a = combo[0], b = combo[1], c = combo[2];
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
             highlightWin(combo);
             return true;
           }
         }
-
         return false;
       }
 
       function highlightWin(combo) {
-        combo.forEach(i => {
-          cellEls[i].classList.add('ttt__cell--win');
-        });
+        combo.forEach(i => cellEls[i].classList.add('ttt__cell--win'));
       }
 
       function checkDraw() {
-        return board.every(cell => {
-          return cell;
-        });
+        return board.every(cell => cell);
       }
 
-      function updateStatus(text) {
-        statusEl.textContent = text;
+      function updateScoreUI() {
+        scoreXEl.textContent = 'X: ' + SCORE.X;
+        scoreOEl.textContent = 'O: ' + SCORE.O;
+        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
       }
 
       function resetGame() {
@@ -591,17 +400,11 @@
           cell.classList.remove('ttt__cell--x');
           cell.classList.remove('ttt__cell--o');
           cell.classList.remove('ttt__cell--win');
-
-          cell.setAttribute(
-            'aria-label',
-            'Row ' + (Math.floor(i / 3) + 1) + ', Column ' + ((i % 3) + 1) + ', empty'
-          );
-
+          cell.setAttribute('aria-label', 'Row ' + (Math.floor(i/3)+1) + ', Column ' + ((i%3)+1) + ', empty');
           cell.setAttribute('aria-pressed', 'false');
         });
 
-        updateStatus('Player ' + currentPlayer + "'s turn");
-
+        statusEl.textContent = "Player " + currentPlayer + "'s turn";
         cellEls[0].focus();
       }
 
@@ -612,41 +415,35 @@
         updateScoreUI();
       }
 
-      function updateScoreUI() {
-        scoreXEl.textContent = 'X: ' + SCORE.X;
-        scoreOEl.textContent = 'O: ' + SCORE.O;
-        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
-      }
-
+      // Bind initial UI behaviors
       function render() {
         cellEls.forEach((cell, i) => {
           const val = board[i];
-
           cell.textContent = val;
-
           if (val) {
             cell.classList.add('ttt__cell--' + val.toLowerCase());
             cell.setAttribute('aria-pressed', 'true');
-
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
-
-            cell.setAttribute(
-              'aria-label',
-              'Row ' + row + ', Column ' + col + ', ' + val
-            );
+            cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + val);
           } else {
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
-
-            cell.setAttribute(
-              'aria-label',
-              'Row ' + row + ', Column ' + col + ', empty'
-            );
+            cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', empty');
           }
         });
-
         updateScoreUI();
+      }
+
+      function init() {
+        cellEls.forEach(cell => {
+          cell.addEventListener('click', onCellClick);
+          cell.addEventListener('keydown', onCellKeyDown);
+        });
+        newGameBtn.addEventListener('click', resetGame);
+        resetScoresBtn.addEventListener('click', resetScores);
+        statusEl.textContent = "Player " + currentPlayer + "'s turn";
+        render();
       }
 
       if (document.readyState === 'loading') {
