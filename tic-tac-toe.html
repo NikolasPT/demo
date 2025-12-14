@@ -13,6 +13,15 @@
       --muted: #94a3b8;
       --win-bg: rgba(28,197,138,0.12);
       color-scheme: dark;
+
+      /* Mark sizing variables (responsive):
+         --mark-min: minimum size (rem)
+         --mark-vw-factor: responsive factor (based on viewport)
+         --mark-max: maximum size (rem)
+      */
+      --mark-min: 2rem;
+      --mark-vw-factor: 10vw;
+      --mark-max: 7rem;
     }
 
     * {
@@ -93,11 +102,26 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
+      /* Make X/O scale responsively to the cell and viewport using clamp */
+      font-size: clamp(var(--mark-min), var(--mark-vw-factor), var(--mark-max));
+      line-height: 1;
       font-weight: 700;
       color: var(--muted);
       cursor: pointer;
       transition: transform 0.08s ease, background 0.12s;
+      user-select: none; /* prevent text selection on mark */
+    }
+
+    /* If SVG marks are added later, make them scale nicely inside the cell */
+    .ttt__cell svg {
+      width: 75%;
+      height: 75%;
+      display: block;
+    }
+
+    .ttt__cell svg .stroke {
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .ttt__cell:focus {
@@ -162,8 +186,9 @@
     }
 
     @media (max-width: 420px) {
-      .ttt__cell {
-        font-size: 34px;
+      /* On small screens let the clamp handle sizing, but slightly reduce max viewport factor */
+      :root {
+        --mark-vw-factor: 18vw;
       }
 
       h1 {
