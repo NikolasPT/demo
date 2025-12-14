@@ -192,6 +192,9 @@
         <div class="ttt__status-sub">
           Click a cell or use keyboard (Tab + Enter/Space)
         </div>
+        <div style="margin-top:6px;">
+          <label><input type="checkbox" id="vsCpu" aria-label="Play vs Computer"> Play vs Computer</label>
+        </div>
       </div>
     </header>
 
@@ -237,6 +240,11 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const vsCpuEl = document.getElementById('vsCpu');
+      const HUMAN_SYMBOL = 'X';
+      const AI_SYMBOL = 'O';
+      let vsCpu = false;
+      let awaitingAIMove = false;
 
       const WINNING_COMBOS = [
         [0, 1, 2],
@@ -255,7 +263,13 @@
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       function init() {
-        // initialize board and controls
+        // Bind vsCpu toggle
+        vsCpuEl.addEventListener('change', () => {
+          vsCpu = vsCpuEl.checked;
+          resetGame();
+        });
+
+        // Bind cells for interaction
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
@@ -279,6 +293,8 @@
         const idx = Number(e.currentTarget.dataset.index);
 
         if (!isGameActive) return;
+        if (awaitingAIMove) return;
+        if (vsCpu && currentPlayer !== HUMAN_SYMBOL) return;
         if (board[idx]) return;
 
         board[idx] = currentPlayer;
@@ -290,6 +306,7 @@
           updateStatus('Player ' + currentPlayer + ' wins!');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
+          awaitingAIMove = false;
           return;
         }
 
@@ -298,12 +315,18 @@
           updateStatus('Draw!');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
+          awaitingAIMove = false;
           return;
         }
 
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-        updateStatus('Player ' + currentPlayer + "'s turn");
+        if (vsCpu) {
+          awaitingAIMove = true;
+          setTimeout(aiMove, 250);
+          return;
+        } else {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          updateStatus('Player ' + currentPlayer + "'s turn");
+        }
       }
 
       function updateCellUI(idx) {
@@ -368,6 +391,7 @@
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
+        awaitingAIMove = false;
 
         cellEls.forEach((cell, i) => {
           cell.textContent = '';
@@ -402,19 +426,106 @@
         scoreDEl.textContent = 'Draws: ' + SCORE.draws;
       }
 
+      function aiMove() {
+        if (!isGameActive) { awaitingAIMove = false; return; }
+        const idx = findBestMove();
+        if (idx === -1) { awaitingAIMove = false; return; }
+        board[idx] = AI_SYMBOL;
+        updateCellUI(idx);
+
+        if (checkWin()) {
+          isGameActive = false;
+          updateStatus('Player ' + AI_SYMBOL + ' wins!');
+          SCORE[AI_SYMBOL] = SCORE[AI_SYMBOL] + 1;
+          updateScoreUI();
+          awaitingAIMove = false;
+          return;
+        }
+
+        if (checkDraw()) {
+          isGameActive = false;
+          updateStatus('Draw!');
+          SCORE.draws = SCORE.draws + 1;
+          updateScoreUI();
+          awaitingAIMove = false;
+          return;
+        }
+
+        currentPlayer = HUMAN_SYMBOL;
+        updateStatus('Player ' + currentPlayer + "'s turn");
+        awaitingAIMove = false;
+      }
+
+      function minimax(state, isAITurn) {
+        const winner = getWinner(state);
+        if (winner) {
+          return winner === AI_SYMBOL ? 10 : -10;
+        }
+        // check draw
+        const isFull = state.every(v => v);
+        if (isFull) return 0;
+
+        if (isAITurn) {
+          let best = -Infinity;
+          for (let i = 0; i < 9; i++) {
+            if (!state[i]) {
+              const next = state.slice();
+              next[i] = AI_SYMBOL;
+              const score = minimax(next, false);
+              if (score > best) best = score;
+            }
+          }
+          return best;
+        } else {
+          let best = Infinity;
+          for (let i = 0; i < 9; i++) {
+            if (!state[i]) {
+              const next = state.slice();
+              next[i] = HUMAN_SYMBOL;
+              const score = minimax(next, true);
+              if (score < best) best = score;
+            }
+          }
+          return best;
+        }
+      }
+
+      function getWinner(state) {
+        for (const combo of WINNING_COMBOS) {
+          const a = combo[0], b = combo[1], c = combo[2];
+          if (state[a] && state[a] === state[b] && state[a] === state[c]) {
+            return state[a];
+          }
+        }
+        return null;
+      }
+
+      function findBestMove() {
+        let bestScore = -Infinity;
+        let bestIdx = -1;
+        for (let i = 0; i < 9; i++) {
+          if (!board[i]) {
+            const next = board.slice();
+            next[i] = AI_SYMBOL;
+            const score = minimax(next, false);
+            if (score > bestScore) {
+              bestScore = score;
+              bestIdx = i;
+            }
+          }
+        }
+        return bestIdx;
+      }
+
       function render() {
         cellEls.forEach((cell, i) => {
           const val = board[i];
-
           cell.textContent = val;
-
           if (val) {
             cell.classList.add('ttt__cell--' + val.toLowerCase());
             cell.setAttribute('aria-pressed', 'true');
-
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
-
             cell.setAttribute(
               'aria-label',
               'Row ' + row + ', Column ' + col + ', ' + val
@@ -422,17 +533,17 @@
           } else {
             const row = Math.floor(i / 3) + 1;
             const col = (i % 3) + 1;
-
             cell.setAttribute(
               'aria-label',
               'Row ' + row + ', Column ' + col + ', empty'
             );
+            cell.setAttribute('aria-pressed', 'false');
           }
         });
-
         updateScoreUI();
       }
 
+      // Expose a small no-op to ensure initial render
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
       } else {
