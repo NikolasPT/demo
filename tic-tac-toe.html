@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tic Tac Toe</title>
+  <style>
+    :root {
+      --bg: #0f1724;
+      --accent: #7c3aed;
+      --x: #e11d48;
+      --o: #06b6d4;
+      --muted: #94a3b8;
+      --win-bg: rgba(28,197,138,0.12);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
+      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #e6eef8;
+    }
+
+    .ttt__container {
+      width: 100%;
+      max-width: 720px;
+      background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.02),
+        rgba(255,255,255,0.01)
+      );
+      border-radius: 12px;
+      padding: 20px 20px 28px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .ttt__status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .ttt__status-msg {
+      font-weight: 600;
+    }
+
+    .ttt__status-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .ttt__board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .ttt__cell {
+      aspect-ratio: 1/1;
+      padding: 0;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.12s;
+    }
+
+    .ttt__cell:focus {
+      outline: 3px solid rgba(124,58,237,0.18);
+      transform: scale(1.02);
+    }
+
+    .ttt__cell:hover {
+      transform: translateY(-3px);
+    }
+
+    .ttt__cell--x {
+      color: var(--x);
+    }
+
+    .ttt__cell--o {
+      color: var(--o);
+    }
+
+    .ttt__cell--win {
+      background: var(--win-bg);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset;
+    }
+
+    .ttt__controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ttt__btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      color: inherit;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .ttt__btn--primary {
+      background: linear-gradient(90deg, var(--accent), #4f46e5);
+      border: none;
+      color: white;
+    }
+
+    .ttt__score {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .ttt__score-item {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 420px) {
+      .ttt__cell {
+        font-size: 34px;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="ttt__container">
+    <header>
+      <h1>Tic Tac Toe</h1>
+      <div class="ttt__status">
+        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
+          Player X's turn
+        </div>
+        <div class="ttt__status-sub">
+          Click a cell or use keyboard (Tab + Enter/Space)
+        </div>
+      </div>
+    </header>
+
+    <section
+      class="ttt__board"
+      role="grid"
+      aria-label="Tic Tac Toe board"
+    >
+      <button
+        class="ttt__cell"
+        data-index="0"
+        aria-label="Row 1, Column 1, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="1"
+        aria-label="Row 1, Column 2, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="2"
+        aria-label="Row 1, Column 3, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="3"
+        aria-label="Row 2, Column 1, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="4"
+        aria-label="Row 2, Column 2, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="5"
+        aria-label="Row 2, Column 3, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="6"
+        aria-label="Row 3, Column 1, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="7"
+        aria-label="Row 3, Column 2, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="8"
+        aria-label="Row 3, Column 3, empty"
+        aria-pressed="false"
+      ></button>
+    </section>
+
+    <div class="ttt__controls">
+      <div class="ttt__score">
+        <span id="scoreX" class="ttt__score-item">X: 0</span>
+        <span id="scoreO" class="ttt__score-item">O: 0</span>
+        <span id="scoreD" class="ttt__score-item">Draws: 0</span>
+      </div>
+
+      <div>
+        <button id="newGame" class="ttt__btn ttt__btn--primary">
+          New Game
+        </button>
+        <button id="resetScores" class="ttt__btn" title="Reset scores">
+          Reset Scores
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const cellEls = Array.from(
+        document.querySelectorAll('.ttt__cell')
+      );
+
+      const statusEl = document.getElementById('statusMsg');
+      const newGameBtn = document.getElementById('newGame');
+      const resetScoresBtn = document.getElementById('resetScores');
+      const scoreXEl = document.getElementById('scoreX');
+      const scoreOEl = document.getElementById('scoreO');
+      const scoreDEl = document.getElementById('scoreD');
+
+      const WINNING_COMBOS = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+
+      let board = Array(9).fill('');
+      let currentPlayer = 'X';
+      let isGameActive = true;
+      const SCORE = { X: 0, O: 0, draws: 0 };
+
+      function init() {
+        cellEls.forEach(cell => {
+          cell.addEventListener('click', onCellClick);
+          cell.addEventListener('keydown', onCellKeyDown);
+        });
+
+        newGameBtn.addEventListener('click', resetGame);
+        resetScoresBtn.addEventListener('click', resetScores);
+
+        updateStatus(
+          'Player ' + currentPlayer + "'s turn"
+        );
+
+        render();
+      }
+
+      function onCellKeyDown(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.target.click();
+        }
+      }
+
+      function onCellClick(e) {
+        const idx = Number(e.currentTarget.dataset.index);
+
+        if (!isGameActive) {
+          return;
+        }
+
+        if (board[idx]) {
+          return;
+        }
+
+        board[idx] = currentPlayer;
+
+        updateCellUI(idx);
+
+        if (checkWin()) {
+          isGameActive = false;
+          updateStatus('Player ' + currentPlayer + ' wins!');
+          SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
+          updateScoreUI();
+          return;
+        }
+
+        if (checkDraw()) {
+          isGameActive = false;
+          updateStatus('Draw!');
+          SCORE.draws = SCORE.draws + 1;
+          updateScoreUI();
+          return;
+        }
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+        updateStatus(
+          'Player ' + currentPlayer + "'s turn"
+        );
+      }
+
+      function updateCellUI(idx) {
+        const cell = cellEls[idx];
+
+        cell.textContent = board[idx];
+
+        cell.classList.remove('ttt__cell--x');
+        cell.classList.remove('ttt__cell--o');
+
+        if (board[idx]) {
+          cell.classList.add(
+            'ttt__cell--' + board[idx].toLowerCase()
+          );
+        }
+
+        const row = Math.floor(idx / 3) + 1;
+        const col = (idx % 3) + 1;
+
+        cell.setAttribute(
+          'aria-label',
+          'Row ' + row + ', Column ' + col + ', ' + board[idx]
+        );
+
+        cell.setAttribute('aria-pressed', 'true');
+      }
+
+      function checkWin() {
+        for (const combo of WINNING_COMBOS) {
+          const a = combo[0];
+          const b = combo[1];
+          const c = combo[2];
+
+          if (
+            board[a] &&
+            board[a] === board[b] &&
+            board[a] === board[c]
+          ) {
+            highlightWin(combo);
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      function highlightWin(combo) {
+        combo.forEach(i => {
+          cellEls[i].classList.add('ttt__cell--win');
+        });
+      }
+
+      function checkDraw() {
+        return board.every(cell => {
+          return cell;
+        });
+      }
+
+      function updateStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function resetGame() {
+        board = Array(9).fill('');
+        currentPlayer = 'X';
+        isGameActive = true;
+
+        cellEls.forEach((cell, i) => {
+          cell.textContent = '';
+          cell.classList.remove('ttt__cell--x');
+          cell.classList.remove('ttt__cell--o');
+          cell.classList.remove('ttt__cell--win');
+
+          cell.setAttribute(
+            'aria-label',
+            'Row ' + (Math.floor(i / 3) + 1) + ', Column ' + ((i % 3) + 1) + ', empty'
+          );
+
+          cell.setAttribute('aria-pressed', 'false');
+        });
+
+        updateStatus('Player ' + currentPlayer + "'s turn");
+
+        cellEls[0].focus();
+      }
+
+      function resetScores() {
+        SCORE.X = 0;
+        SCORE.O = 0;
+        SCORE.draws = 0;
+        updateScoreUI();
+      }
+
+      function updateScoreUI() {
+        scoreXEl.textContent = 'X: ' + SCORE.X;
+        scoreOEl.textContent = 'O: ' + SCORE.O;
+        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+      }
+
+      function render() {
+        cellEls.forEach((cell, i) => {
+          const val = board[i];
+
+          cell.textContent = val;
+
+          if (val) {
+            cell.classList.add('ttt__cell--' + val.toLowerCase());
+            cell.setAttribute('aria-pressed', 'true');
+
+            const row = Math.floor(i / 3) + 1;
+            const col = (i % 3) + 1;
+
+            cell.setAttribute(
+              'aria-label',
+              'Row ' + row + ', Column ' + col + ', ' + val
+            );
+          } else {
+            const row = Math.floor(i / 3) + 1;
+            const col = (i % 3) + 1;
+
+            cell.setAttribute(
+              'aria-label',
+              'Row ' + row + ', Column ' + col + ', empty'
+            );
+          }
+        });
+
+        updateScoreUI();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
