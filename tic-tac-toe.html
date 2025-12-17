@@ -571,7 +571,8 @@
         });
 
         updateStatus("Player " + currentPlayer + "'s turn");
-        cellEls[0].focus();
+        // focus first cell for keyboard users
+        try { cellEls[0].focus(); } catch (e) { /* ignore if not focusable */ }
 
         // If computer should start after reset
         maybeTriggerComputerTurn();
@@ -628,7 +629,13 @@
         if (move === null && corners.length) move = corners[0];
         // 5) Fallback first available
         const avail = getAvailableMoves();
-        if (move === null && avail.length) move = avail[0];
+        if ((move === null || move === undefined) && avail.length) move = avail[0];
+
+        // ensure move is on an empty cell; if not, fallback
+        if (move !== null && move !== undefined && board[move]) {
+          const avail2 = getAvailableMoves();
+          return avail2.length ? avail2[0] : null;
+        }
 
         return move;
       }
