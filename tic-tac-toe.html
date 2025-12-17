@@ -44,8 +44,8 @@
     .ttt__container {
       width: 100%;
       max-width: 720px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02),
-                   rgba(255,255,255,0.01));
+      background: linear-gradient(180deg,
+                   rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
@@ -115,13 +115,8 @@
       transform: scale(1.02);
     }
 
-    .ttt__cell--x {
-      color: var(--x);
-    }
-
-    .ttt__cell--o {
-      color: var(--o);
-    }
+    .ttt__cell--x { color: var(--x); }
+    .ttt__cell--o { color: var(--o); }
 
     .ttt__cell--win {
       background: var(--win-bg);
@@ -132,18 +127,9 @@
 
     /* Placed mark pop animation */
     @keyframes mark-pop {
-      0% {
-        transform: scale(0.4) rotate(-10deg);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.08) rotate(4deg);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1) rotate(0deg);
-        opacity: 1;
-      }
+      0% { transform: scale(0.4) rotate(-10deg); opacity: 0; }
+      60% { transform: scale(1.08) rotate(4deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
     .ttt__cell--placed {
@@ -247,13 +233,9 @@
     }
 
     @media (max-width: 420px) {
-      :root {
-        --mark-vw-factor: 18vw;
-      }
+      :root { --mark-vw-factor: 18vw; }
 
-      h1 {
-        font-size: 16px;
-      }
+      h1 { font-size: 16px; }
 
       .ttt__controls {
         flex-direction: column;
@@ -270,27 +252,87 @@
       <h1>Tic Tac Toe</h1>
 
       <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
+        <div
+          id="statusMsg"
+          class="ttt__status-msg"
+          aria-live="polite"
+        >
           Player X's turn
         </div>
+
         <div class="ttt__status-sub">
           Click a cell or use keyboard (Tab + Enter/Space)
         </div>
       </div>
     </header>
 
-    <section class="ttt__board" role="grid" aria-label="Tic Tac Toe board">
-      <button class="ttt__cell" data-index="0" aria-label="Row 1, Column 1, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="1" aria-label="Row 1, Column 2, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="2" aria-label="Row 1, Column 3, empty" aria-pressed="false"></button>
+    <section
+      class="ttt__board"
+      role="grid"
+      aria-label="Tic Tac Toe board"
+    >
+      <button
+        class="ttt__cell"
+        data-index="0"
+        aria-label="Row 1, Column 1, empty"
+        aria-pressed="false"
+      ></button>
 
-      <button class="ttt__cell" data-index="3" aria-label="Row 2, Column 1, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="4" aria-label="Row 2, Column 2, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="5" aria-label="Row 2, Column 3, empty" aria-pressed="false"></button>
+      <button
+        class="ttt__cell"
+        data-index="1"
+        aria-label="Row 1, Column 2, empty"
+        aria-pressed="false"
+      ></button>
 
-      <button class="ttt__cell" data-index="6" aria-label="Row 3, Column 1, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="7" aria-label="Row 3, Column 2, empty" aria-pressed="false"></button>
-      <button class="ttt__cell" data-index="8" aria-label="Row 3, Column 3, empty" aria-pressed="false"></button>
+      <button
+        class="ttt__cell"
+        data-index="2"
+        aria-label="Row 1, Column 3, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="3"
+        aria-label="Row 2, Column 1, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="4"
+        aria-label="Row 2, Column 2, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="5"
+        aria-label="Row 2, Column 3, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="6"
+        aria-label="Row 3, Column 1, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="7"
+        aria-label="Row 3, Column 2, empty"
+        aria-pressed="false"
+      ></button>
+
+      <button
+        class="ttt__cell"
+        data-index="8"
+        aria-label="Row 3, Column 3, empty"
+        aria-pressed="false"
+      ></button>
     </section>
 
     <div class="ttt__controls">
@@ -304,19 +346,28 @@
         <button id="newGame" class="ttt__btn ttt__btn--primary">
           New Game
         </button>
+
         <button id="resetScores" class="ttt__btn" title="Reset scores">
           Reset Scores
         </button>
 
         <span class="ttt__ai-controls">
           <label>
-            <input id="vsComputer" type="checkbox" aria-label="Play vs Computer" />
+            <input
+              id="vsComputer"
+              type="checkbox"
+              aria-label="Play vs Computer"
+            />
             Play vs Computer
           </label>
 
           <label>
             <span class="ttt__status-sub">Side:</span>
-            <select id="computerSide" class="ttt__select" aria-label="Computer plays as X or O">
+            <select
+              id="computerSide"
+              class="ttt__select"
+              aria-label="Computer plays as X or O"
+            >
               <option value="X">X</option>
               <option value="O" selected>O</option>
             </select>
@@ -356,8 +407,8 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
-      // Computer opponent state
-      let vsComputer = false;
+      // Computer opponent state (boolean follows naming convention)
+      let isVsComputer = false;
       let computerSide = 'O';
       let computerMoveTimeout = null;
 
@@ -372,26 +423,32 @@
         resetScoresBtn.addEventListener('click', resetScores);
 
         vsComputerCheckbox.addEventListener('change', (e) => {
-          vsComputer = e.target.checked;
-          computerSideSelect.disabled = !vsComputer;
+          isVsComputer = e.target.checked;
+          computerSideSelect.disabled = !isVsComputer;
+          if (computerSideSelect.disabled) {
+            computerSideSelect.setAttribute('aria-disabled', 'true');
+          } else {
+            computerSideSelect.removeAttribute('aria-disabled');
+          }
 
-          // If enabling vsComputer and it's computer's turn, trigger move
+          // If enabling computer play and it's computer's turn, trigger move
           maybeTriggerComputerTurn();
         });
 
         computerSideSelect.addEventListener('change', (e) => {
           computerSide = e.target.value;
 
-          // If computer is now set to start and vsComputer is on, trigger
+          // If computer is now set to start and is enabled, trigger
           maybeTriggerComputerTurn();
         });
 
         // set defaults in UI
-        vsComputerCheckbox.checked = vsComputer;
+        vsComputerCheckbox.checked = isVsComputer;
         computerSideSelect.value = computerSide;
-        computerSideSelect.disabled = !vsComputer;
+        computerSideSelect.disabled = !isVsComputer;
+        if (!isVsComputer) computerSideSelect.setAttribute('aria-disabled', 'true');
 
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus(`Player ${currentPlayer}'s turn`);
         render();
 
         // If the computer should start (e.g. computer plays X), trigger
@@ -411,7 +468,7 @@
         if (!isGameActive) return;
 
         // Prevent human from playing on the computer's turn
-        if (vsComputer && currentPlayer === computerSide) return;
+        if (isVsComputer && currentPlayer === computerSide) return;
 
         if (board[idx]) return;
 
@@ -426,8 +483,11 @@
         // Check win
         if (checkWin()) {
           isGameActive = false;
-          const winnerLabel = (vsComputer && currentPlayer === computerSide) ? ('Computer (' + currentPlayer + ')') : ('Player ' + currentPlayer);
-          updateStatus(winnerLabel + ' wins!');
+          const winnerLabel = (isVsComputer && currentPlayer === computerSide)
+            ? `Computer (${currentPlayer})`
+            : `Player ${currentPlayer}`;
+
+          updateStatus(`${winnerLabel} wins!`);
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
@@ -459,12 +519,12 @@
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
         // Update status: if computer turn, announce computer's turn
-        if (vsComputer && currentPlayer === computerSide) {
+        if (isVsComputer && currentPlayer === computerSide) {
           updateStatus("Computer's turn");
           // schedule computer move
           maybeTriggerComputerTurn();
         } else {
-          updateStatus('Player ' + currentPlayer + "'s turn");
+          updateStatus(`Player ${currentPlayer}'s turn`);
         }
       }
 
@@ -486,7 +546,7 @@
 
         cell.setAttribute(
           'aria-label',
-          'Row ' + row + ', Column ' + col + ', ' + board[idx]
+          `Row ${row}, Column ${col}, ${board[idx] || 'empty'}`
         );
 
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
@@ -532,9 +592,7 @@
       }
 
       function checkDraw() {
-        return board.every(cell => {
-          return cell;
-        });
+        return board.every(cell => { return cell; });
       }
 
       function updateStatus(text) {
@@ -564,13 +622,13 @@
           const c = (i % 3) + 1;
           cell.setAttribute(
             'aria-label',
-            'Row ' + r + ', Column ' + c + ', empty'
+            `Row ${r}, Column ${c}, empty`
           );
 
           cell.setAttribute('aria-pressed', 'false');
         });
 
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus(`Player ${currentPlayer}'s turn`);
         cellEls[0].focus();
 
         // If computer should start after reset
@@ -578,6 +636,13 @@
       }
 
       function resetScores() {
+        // clear any pending computer action/hints to avoid unexpected moves
+        if (computerMoveTimeout) {
+          clearTimeout(computerMoveTimeout);
+          computerMoveTimeout = null;
+        }
+        removeAllHints();
+
         SCORE.X = 0;
         SCORE.O = 0;
         SCORE.draws = 0;
@@ -585,9 +650,9 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = 'X: ' + SCORE.X;
-        scoreOEl.textContent = 'O: ' + SCORE.O;
-        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+        scoreXEl.textContent = `X: ${SCORE.X}`;
+        scoreOEl.textContent = `O: ${SCORE.O}`;
+        scoreDEl.textContent = `Draws: ${SCORE.draws}`;
       }
 
       // AI helpers
@@ -646,7 +711,7 @@
 
         removeAllHints();
 
-        if (!vsComputer || !isGameActive) return;
+        if (!isVsComputer || !isGameActive) return;
         if (currentPlayer !== computerSide) return;
 
         // Announce computer turn
@@ -671,7 +736,7 @@
 
       function computerMakeMove() {
         if (!isGameActive) return;
-        if (!vsComputer) return;
+        if (!isVsComputer) return;
         if (currentPlayer !== computerSide) return;
 
         // remove hints in case they're present
@@ -712,7 +777,7 @@
 
             cell.setAttribute(
               'aria-label',
-              'Row ' + row + ', Column ' + col + ', ' + val
+              `Row ${row}, Column ${col}, ${val}`
             );
           } else {
             const row = Math.floor(i / 3) + 1;
@@ -720,7 +785,7 @@
 
             cell.setAttribute(
               'aria-label',
-              'Row ' + row + ', Column ' + col + ', empty'
+              `Row ${row}, Column ${col}, empty`
             );
           }
         });
