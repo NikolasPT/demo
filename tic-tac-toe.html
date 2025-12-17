@@ -126,6 +126,47 @@
     .ttt__cell--win {
       background: var(--win-bg);
       box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset;
+      /* gentle pulsing animation for winning cells */
+      animation: win-pulse 1200ms ease-in-out infinite;
+    }
+
+    /* Placed mark pop animation */
+    @keyframes mark-pop {
+      0% {
+        transform: scale(0.4) rotate(-10deg);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(1.08) rotate(4deg);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+
+    .ttt__cell--placed {
+      animation: mark-pop 300ms cubic-bezier(.2,.9,.2,1) both;
+    }
+
+    /* Winning pulse */
+    @keyframes win-pulse {
+      0% { box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset; }
+      50% { box-shadow: 0 12px 32px rgba(124,58,237,0.12) inset; }
+      100% { box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset; }
+    }
+
+    /* Computer hint pulse */
+    @keyframes hint-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(124,58,237,0.12); }
+      70% { box-shadow: 0 0 0 10px rgba(124,58,237,0.02); }
+      100% { box-shadow: 0 0 0 0 rgba(124,58,237,0); }
+    }
+
+    .ttt__cell--hint {
+      animation: hint-pulse 900ms ease-in-out infinite;
+      border-color: rgba(124,58,237,0.22);
     }
 
     .ttt__controls {
@@ -369,7 +410,7 @@
       function applyMoveAndAdvance(idx) {
         // Place move
         board[idx] = currentPlayer;
-        updateCellUI(idx);
+        updateCellUI(idx, true);
 
         // Check win
         if (checkWin()) {
@@ -379,11 +420,12 @@
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
-          // cancel any pending computer move
+          // cancel any pending computer move and hints
           if (computerMoveTimeout) {
             clearTimeout(computerMoveTimeout);
             computerMoveTimeout = null;
           }
+          removeAllHints();
           return;
         }
 
@@ -398,6 +440,7 @@
             clearTimeout(computerMoveTimeout);
             computerMoveTimeout = null;
           }
+          removeAllHints();
           return;
         }
 
@@ -414,7 +457,8 @@
         }
       }
 
-      function updateCellUI(idx) {
+      // Update a single cell UI. animate=true will run the pop-in animation.
+      function updateCellUI(idx, animate = false) {
         const cell = cellEls[idx];
 
         cell.textContent = board[idx];
@@ -434,7 +478,21 @@
           'Row ' + row + ', Column ' + col + ', ' + board[idx]
         );
 
-        cell.setAttribute('aria-pressed', 'true');
+        cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
+
+        if (animate && board[idx]) {
+          // ensure we can re-trigger the animation if class was recently used
+          cell.classList.remove('ttt__cell--placed');
+          // force reflow so the animation restarts reliably
+          void cell.offsetWidth;
+          cell.classList.add('ttt__cell--placed');
+
+          const onAnimEnd = () => {
+            cell.classList.remove('ttt__cell--placed');
+          };
+
+          cell.addEventListener('animationend', onAnimEnd, { once: true });
+        }
       }
 
       function checkWin() {
@@ -488,6 +546,8 @@
           cell.classList.remove('ttt__cell--x');
           cell.classList.remove('ttt__cell--o');
           cell.classList.remove('ttt__cell--win');
+          cell.classList.remove('ttt__cell--placed');
+          cell.classList.remove('ttt__cell--hint');
 
           const r = Math.floor(i / 3) + 1;
           const c = (i % 3) + 1;
@@ -542,12 +602,38 @@
         return null;
       }
 
+      // Compute a tentative computer move deterministically for hinting
+      function computeTentativeComputerMove() {
+        const opponent = computerSide === 'X' ? 'O' : 'X';
+
+        // 1) Win if possible
+        let move = findWinningMoveFor(computerSide);
+        // 2) Block opponent's win
+        if (move === null) move = findWinningMoveFor(opponent);
+        // 3) Take center
+        if (move === null && !board[4]) move = 4;
+        // 4) Take first available corner (deterministic)
+        const corners = [0,2,6,8].filter(i => !board[i]);
+        if (move === null && corners.length) move = corners[0];
+        // 5) Fallback first available
+        const avail = getAvailableMoves();
+        if (move === null && avail.length) move = avail[0];
+
+        return move;
+      }
+
+      function removeAllHints() {
+        cellEls.forEach(c => c.classList.remove('ttt__cell--hint'));
+      }
+
       function maybeTriggerComputerTurn() {
-        // clear any existing scheduled move first
+        // clear any existing scheduled move/hints first
         if (computerMoveTimeout) {
           clearTimeout(computerMoveTimeout);
           computerMoveTimeout = null;
         }
+
+        removeAllHints();
 
         if (!vsComputer || !isGameActive) return;
         if (currentPlayer !== computerSide) return;
@@ -555,8 +641,19 @@
         // Announce computer turn
         updateStatus("Computer's turn");
 
+        // compute tentative move and show hint
+        const tentative = computeTentativeComputerMove();
+        if (tentative !== null && tentative !== undefined) {
+          const target = cellEls[tentative];
+          if (target && !board[tentative]) {
+            target.classList.add('ttt__cell--hint');
+          }
+        }
+
         computerMoveTimeout = setTimeout(() => {
           computerMoveTimeout = null;
+          // remove any hint visuals before making move
+          removeAllHints();
           computerMakeMove();
         }, 350);
       }
@@ -565,6 +662,9 @@
         if (!isGameActive) return;
         if (!vsComputer) return;
         if (currentPlayer !== computerSide) return;
+
+        // remove hints in case they're present
+        removeAllHints();
 
         const opponent = currentPlayer === 'X' ? 'O' : 'X';
 
