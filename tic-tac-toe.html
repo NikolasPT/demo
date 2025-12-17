@@ -157,16 +157,27 @@
       100% { box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset; }
     }
 
-    /* Computer hint pulse */
+    /* Computer hint pulse - optimized to use transform/opacity for better performance */
     @keyframes hint-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(124,58,237,0.12); }
-      70% { box-shadow: 0 0 0 10px rgba(124,58,237,0.02); }
-      100% { box-shadow: 0 0 0 0 rgba(124,58,237,0); }
+      0% { transform: scale(1); opacity: 1; box-shadow: none; }
+      50% { transform: scale(1.04); opacity: 0.98; box-shadow: 0 0 10px rgba(124,58,237,0.04); }
+      100% { transform: scale(1); opacity: 1; box-shadow: none; }
     }
 
     .ttt__cell--hint {
-      animation: hint-pulse 900ms ease-in-out infinite;
+      animation: hint-pulse 700ms ease-in-out infinite;
       border-color: rgba(124,58,237,0.22);
+      /* avoid the hint affecting layout; use transform instead */
+      will-change: transform, opacity;
+    }
+
+    /* Respect user preference for reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .ttt__cell--placed,
+      .ttt__cell--hint,
+      .ttt__cell--win {
+        animation: none !important;
+      }
     }
 
     .ttt__controls {
