@@ -449,7 +449,7 @@
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       // Computer opponent state
-      let vsComputer = false;
+      let isVsComputer = false;
       let computerSide = 'O';
       let computerMoveTimeout = null;
 
@@ -464,8 +464,8 @@
         resetScoresBtn.addEventListener('click', resetScores);
 
         vsComputerCheckbox.addEventListener('change', (e) => {
-          vsComputer = e.target.checked === true;
-          computerSideSelect.disabled = !vsComputer;
+          isVsComputer = e.target.checked === true;
+          computerSideSelect.disabled = !isVsComputer;
 
           // If computer is enabled and it's computer's turn, trigger
           maybeTriggerComputerTurn();
@@ -479,9 +479,9 @@
         });
 
         // set UI defaults
-        vsComputerCheckbox.checked = vsComputer;
+        vsComputerCheckbox.checked = isVsComputer;
         computerSideSelect.value = computerSide;
-        computerSideSelect.disabled = !vsComputer;
+        computerSideSelect.disabled = !isVsComputer;
 
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
@@ -505,7 +505,7 @@
         if (!isGameActive) return;
 
         // Prevent human from playing when it's computer's turn
-        if (vsComputer && currentPlayer === computerSide) return;
+        if (isVsComputer && currentPlayer === computerSide) return;
 
         if (board[idx]) return;
 
@@ -520,7 +520,7 @@
         // Check for a win
         if (checkWin()) {
           isGameActive = false;
-          const winnerLabel = (vsComputer && currentPlayer === computerSide)
+          const winnerLabel = (isVsComputer && currentPlayer === computerSide)
             ? ('Computer (' + currentPlayer + ')')
             : ('Player ' + currentPlayer);
 
@@ -557,7 +557,7 @@
         // Continue game: switch player
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
-        if (vsComputer && currentPlayer === computerSide) {
+        if (isVsComputer && currentPlayer === computerSide) {
           updateStatus("Computer's turn");
           maybeTriggerComputerTurn();
         } else {
@@ -738,7 +738,7 @@
 
         removeAllHints();
 
-        if (!vsComputer || !isGameActive) return;
+        if (!isVsComputer || !isGameActive) return;
         if (currentPlayer !== computerSide) return;
 
         updateStatus("Computer's turn");
@@ -766,7 +766,7 @@
       // deterministic when multiple corners/slots are available.
       function computerMakeMove() {
         if (!isGameActive) return;
-        if (!vsComputer) return;
+        if (!isVsComputer) return;
         if (currentPlayer !== computerSide) return;
 
         removeAllHints();
