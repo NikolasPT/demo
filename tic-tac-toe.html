@@ -78,7 +78,7 @@
 
     h1 { font-size: 20px; margin: 0; }
 
-    .ttt__header-controls { display:flex; align-items:center; gap:12px; }
+    .ttt__header-controls { display: flex; align-items: center; gap: 12px; }
 
     .ttt__status { display: flex; flex-direction: column; align-items: flex-end; }
     .ttt__status-msg { font-weight: 600; }
@@ -261,7 +261,7 @@
 
         initTheme();
 
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus(`Player ${currentPlayer}'s turn`);
         render();
       }
 
@@ -292,7 +292,7 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + currentPlayer + ' wins!');
+          updateStatus(`Player ${currentPlayer} wins!`);
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
           return;
@@ -307,7 +307,7 @@
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus(`Player ${currentPlayer}'s turn`);
       }
 
       function updateCellUI(idx) {
@@ -316,13 +316,13 @@
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
         if (board[idx]) {
-          cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
+          cell.classList.add(`ttt__cell--${board[idx].toLowerCase()}`);
         }
 
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
 
-        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
+        cell.setAttribute('aria-label', `Row ${row}, Column ${col}, ${board[idx]}`);
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
 
@@ -358,11 +358,11 @@
           const r = Math.floor(i / 3) + 1;
           const c = (i % 3) + 1;
 
-          cell.setAttribute('aria-label', 'Row ' + r + ', Column ' + c + ', empty');
+          cell.setAttribute('aria-label', `Row ${r}, Column ${c}, empty`);
           cell.setAttribute('aria-pressed', 'false');
         });
 
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus(`Player ${currentPlayer}'s turn`);
         render();
       }
 
@@ -374,9 +374,9 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = 'X: ' + SCORE.X;
-        scoreOEl.textContent = 'O: ' + SCORE.O;
-        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+        scoreXEl.textContent = `X: ${SCORE.X}`;
+        scoreOEl.textContent = `O: ${SCORE.O}`;
+        scoreDEl.textContent = `Draws: ${SCORE.draws}`;
       }
 
       function render() {
@@ -387,7 +387,7 @@
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
           if (val) {
-            cell.classList.add('ttt__cell--' + val.toLowerCase());
+            cell.classList.add(`ttt__cell--${val.toLowerCase()}`);
           }
         });
 
