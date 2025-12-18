@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"utf-8\">
-  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tic Tac Toe</title>
   <style>
     :root {
@@ -20,7 +20,7 @@
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(180deg, var(--bg), #071021 120%);
       display: flex;
       align-items: center;
@@ -107,9 +107,13 @@
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
     .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
+    .ttt__settings { display: inline-flex; gap: 8px; align-items: center; }
+    .ttt__select { background: rgba(255,255,255,0.02); color: inherit; border: 1px solid rgba(255,255,255,0.04); padding: 6px 8px; border-radius: 8px; }
+
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
       .ttt__container { padding: 14px; }
+      .ttt__controls { flex-direction: column; align-items: stretch; gap: 8px; }
     }
   </style>
 </head>
@@ -142,7 +146,19 @@
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
-      <div>
+      <div class="ttt__settings">
+        <label for="opponentSelect" class="visually-hidden">Opponent</label>
+        <select id="opponentSelect" class="ttt__select" aria-label="Opponent">
+          <option value="human">2 Players</option>
+          <option value="computer">Play vs Computer</option>
+        </select>
+
+        <label for="humanMarkSelect" class="visually-hidden">Your mark</label>
+        <select id="humanMarkSelect" class="ttt__select" aria-label="Your mark">
+          <option value="X">Human: X</option>
+          <option value="O">Human: O</option>
+        </select>
+
         <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
         <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
       </div>
@@ -159,6 +175,9 @@
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
 
+      const opponentSelectEl = document.getElementById('opponentSelect');
+      const humanMarkSelectEl = document.getElementById('humanMarkSelect');
+
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
         [0,3,6], [1,4,7], [2,5,8],
@@ -170,6 +189,13 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      // New AI-related state
+      let opponentMode = 'human'; // 'human' or 'computer'
+      let humanMark = 'X';
+      let aiMark = 'O';
+      const aiThinkingDelay = 400; // ms
+      let aiTimer = null;
+
       function init() {
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
@@ -177,8 +203,43 @@
         });
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+
+        opponentSelectEl.addEventListener('change', onOpponentChange);
+        humanMarkSelectEl.addEventListener('change', onHumanMarkChange);
+
+        // Initialize selects to defaults
+        opponentSelectEl.value = opponentMode;
+        humanMarkSelectEl.value = humanMark;
+
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+
+        // If computer should start, schedule its move
+        if (opponentMode === 'computer' && currentPlayer === aiMark && isGameActive) {
+          scheduleAIMove();
+        }
+      }
+
+      function onOpponentChange(e) {
+        opponentMode = e.target.value;
+        resetGame();
+      }
+
+      function onHumanMarkChange(e) {
+        humanMark = e.target.value;
+        aiMark = humanMark === 'X' ? 'O' : 'X';
+        resetGame();
+      }
+
+      function scheduleAIMove() {
+        if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
+        updateStatus('Computer is thinking...');
+        aiTimer = setTimeout(() => {
+          aiTimer = null;
+          if (isGameActive && currentPlayer === aiMark) {
+            computerMove();
+          }
+        }, aiThinkingDelay);
       }
 
       function onCellKeyDown(e) {
@@ -192,6 +253,8 @@
         const idx = Number(e.currentTarget.dataset.index);
         if (!isGameActive) return;
         if (board[idx]) return;
+        // If playing vs computer, ignore clicks when it's AI's turn
+        if (opponentMode === 'computer' && currentPlayer === aiMark) return;
         placeMove(idx);
       }
 
@@ -217,6 +280,11 @@
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateStatus("Player " + currentPlayer + "'s turn");
+
+        // If opponent is computer and it's AI's turn, schedule move
+        if (opponentMode === 'computer' && isGameActive && currentPlayer === aiMark) {
+          scheduleAIMove();
+        }
       }
 
       function updateCellUI(idx) {
@@ -228,7 +296,7 @@
         }
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
+        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + (board[idx] || 'empty'));
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
 
@@ -251,9 +319,13 @@
       }
 
       function resetGame() {
+        // clear any pending AI timer
+        if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
+
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
+        aiMark = humanMark === 'X' ? 'O' : 'X';
         cellEls.forEach((cell, i) => {
           cell.textContent = '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
@@ -263,6 +335,11 @@
         });
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+
+        // If computer should start (human chose O), schedule AI
+        if (opponentMode === 'computer' && currentPlayer === aiMark && isGameActive) {
+          scheduleAIMove();
+        }
       }
 
       function resetScores() {
@@ -283,6 +360,53 @@
           if (val) cell.classList.add('ttt__cell--' + val.toLowerCase());
         });
         updateScoreUI();
+      }
+
+      // AI logic: tries to win, block, take center, take corner, else random
+      function computerMove() {
+        if (!isGameActive) return;
+        const emptyIdxs = board.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+        if (emptyIdxs.length === 0) return;
+
+        // 1) Win if possible
+        for (const i of emptyIdxs) {
+          board[i] = aiMark;
+          if (checkWin()) {
+            board[i] = ''; // restore; placeMove will set it
+            placeMove(i);
+            return;
+          }
+          board[i] = '';
+        }
+
+        // 2) Block opponent win
+        for (const i of emptyIdxs) {
+          board[i] = humanMark;
+          if (checkWin()) {
+            board[i] = '';
+            placeMove(i);
+            return;
+          }
+          board[i] = '';
+        }
+
+        // 3) Take center
+        if (board[4] === '') {
+          placeMove(4);
+          return;
+        }
+
+        // 4) Take a random available corner
+        const corners = [0,2,6,8].filter(i => board[i] === '');
+        if (corners.length > 0) {
+          const idx = corners[Math.floor(Math.random() * corners.length)];
+          placeMove(idx);
+          return;
+        }
+
+        // 5) Fallback: random available
+        const idx = emptyIdxs[Math.floor(Math.random() * emptyIdxs.length)];
+        placeMove(idx);
       }
 
       if (document.readyState === 'loading') {
