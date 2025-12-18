@@ -1,1 +1,0 @@
-{"title":"Add Tic Tac Toe single-file app (tic-tac-toe.html)","body":"Closes #1\n\nAdds a self-contained Tic Tac Toe web app in a single HTML file. Features: two-player local play, keyboard navigation, win/draw detection, scoreboard persisted to localStorage, and a restart/start toggle.","head":"feature/1-tic-tac-toe-single-file","base":"main"}
