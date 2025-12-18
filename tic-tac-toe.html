@@ -286,7 +286,7 @@
         cell.textContent = board[idx];
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
         if (board[idx]) {
-          cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
+          cell.classList.add(`ttt__cell--${board[idx].toLowerCase()}`);
         }
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
@@ -339,9 +339,9 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = 'X: ' + SCORE.X;
-        scoreOEl.textContent = 'O: ' + SCORE.O;
-        scoreDrawsEl.textContent = 'Draws: ' + SCORE.draws;
+        scoreXEl.textContent = `X: ${SCORE.X}`;
+        scoreOEl.textContent = `O: ${SCORE.O}`;
+        scoreDrawsEl.textContent = `Draws: ${SCORE.draws}`;
       }
 
       function render() {
@@ -349,7 +349,7 @@
           const val = board[i];
           cell.textContent = val;
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
-          if (val) cell.classList.add('ttt__cell--' + val.toLowerCase());
+          if (val) cell.classList.add(`ttt__cell--${val.toLowerCase()}`);
         });
         updateScoreUI();
       }
