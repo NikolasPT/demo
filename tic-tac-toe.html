@@ -1,16 +1,38 @@
 <!doctype html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"utf-8\">
-  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tic Tac Toe</title>
   <style>
     :root {
+      /* palette / tokens (dark default) */
       --bg: #0f1724;
+      --panel-bg: rgba(255,255,255,0.02);
+      --cell-bg: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      --cell-border: rgba(255,255,255,0.04);
+      --text-color: #e6eef8;
+      --muted: #94a3b8;
       --x: #e11d48;
       --o: #06b6d4;
-      --muted: #94a3b8;
+      --btn-primary-start: #4f46e5;
+      --btn-primary-end: #7c3aed;
       color-scheme: dark;
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --panel-bg: rgba(2,6,23,0.03);
+      --cell-bg: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
+      --cell-border: rgba(2,6,23,0.06);
+      --text-color: #071021;
+      --muted: #475569;
+      --x: #b91c1c;
+      --o: #0ea5a4;
+      --btn-primary-start: #4338ca;
+      --btn-primary-end: #7c3aed;
+      color-scheme: light;
     }
 
     * {
@@ -20,19 +42,19 @@
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(180deg, var(--bg), #071021 120%);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
-      color: #e6eef8;
+      color: var(--text-color);
     }
 
     .ttt__container {
       width: 100%;
       max-width: 720px;
-      background: rgba(255,255,255,0.02);
+      background: var(--panel-bg);
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
@@ -63,8 +85,8 @@
       aspect-ratio: 1/1;
       padding: 0;
       border-radius: 10px;
-      border: 2px solid rgba(255,255,255,0.04);
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border: 2px solid var(--cell-border);
+      background: var(--cell-bg);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -98,8 +120,11 @@
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
 
+    /* adjust button border color in light theme */
+    [data-theme="light"] .ttt__btn { border-color: rgba(2,6,23,0.06); }
+
     .ttt__btn--primary {
-      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      background: linear-gradient(90deg, var(--btn-primary-start), var(--btn-primary-end));
       border: none;
       color: white;
     }
@@ -117,9 +142,12 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-      <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player X's turn</div>
-        <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button id="themeToggle" class="ttt__btn" title="Toggle theme" aria-pressed="false" aria-label="Switch to light theme">🌙</button>
+        <div class="ttt__status">
+          <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player X's turn</div>
+          <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+        </div>
       </div>
     </header>
 
@@ -158,6 +186,9 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const themeToggleBtn = document.getElementById('themeToggle');
+
+      const THEME_KEY = 'ttt-theme';
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -170,6 +201,37 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'light') {
+          themeToggleBtn.textContent = '☀️';
+          themeToggleBtn.setAttribute('aria-pressed', 'true');
+          themeToggleBtn.setAttribute('aria-label', 'Switch to dark theme');
+        } else {
+          themeToggleBtn.textContent = '🌙';
+          themeToggleBtn.setAttribute('aria-pressed', 'false');
+          themeToggleBtn.setAttribute('aria-label', 'Switch to light theme');
+        }
+        try { localStorage.setItem(THEME_KEY, theme); } catch (e) { /* ignore */ }
+      }
+
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+      }
+
+      function initTheme() {
+        const saved = (function () {
+          try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+        })();
+        if (saved === 'light' || saved === 'dark') {
+          applyTheme(saved);
+          return;
+        }
+        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+        applyTheme(prefersLight ? 'light' : 'dark');
+      }
+
       function init() {
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
@@ -177,6 +239,10 @@
         });
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+        themeToggleBtn.addEventListener('click', toggleTheme);
+
+        initTheme();
+
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
       }
