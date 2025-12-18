@@ -1,1 +1,0 @@
-Add tic-tac-toe.html — playable single-file Tic Tac Toe app
