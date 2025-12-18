@@ -4,6 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tic Tac Toe</title>
+
+  <!-- Apply theme early to avoid flash of wrong theme -->
+  <script>
+    (function(){
+      try {
+        var saved = localStorage.getItem('ttt_theme');
+        var theme;
+        if (saved === 'light' || saved === 'dark') {
+          theme = saved;
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          theme = 'light';
+        } else {
+          theme = 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        // ignore storage errors
+      }
+    })();
+  </script>
+
   <style>
     :root {
       --bg: #0f1724;
@@ -17,6 +38,17 @@
       --mark-min: 2rem;
       --mark-vw-factor: 10vw;
       --mark-max: 7rem;
+    }
+
+    /* Light theme overrides */
+    html[data-theme="light"] {
+      --bg: linear-gradient(180deg, #f8fafc, #eef2ff 120%);
+      --accent: #6d28d9;
+      --x: #b91c1c;
+      --o: #0369a1;
+      --muted: #475569;
+      --win-bg: rgba(34,197,94,0.08);
+      color-scheme: light;
     }
 
     * {
@@ -41,6 +73,12 @@
       transition: background 220ms ease, color 220ms ease;
     }
 
+    /* When in light theme swap body colors to use variables properly */
+    html[data-theme="light"] body {
+      color: #0f1724;
+      background: var(--bg);
+    }
+
     .ttt__container {
       width: 100%;
       max-width: 720px;
@@ -51,6 +89,12 @@
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
       transition: background 220ms ease, color 220ms ease,
         box-shadow 220ms ease;
+    }
+
+    /* Light container background */
+    html[data-theme="light"] .ttt__container {
+      background: linear-gradient(180deg, rgba(2,6,23,0.02), rgba(15,23,36,0.02));
+      box-shadow: 0 6px 22px rgba(2,6,23,0.06);
     }
 
     header {
@@ -267,7 +311,10 @@
 <body>
   <main class="ttt__container">
     <header>
-      <h1>Tic Tac Toe</h1>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <h1>Tic Tac Toe</h1>
+        <button id="themeToggle" class="ttt__btn" aria-pressed="false" title="Toggle dark / light mode">🌙</button>
+      </div>
 
       <div class="ttt__status">
         <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
@@ -339,6 +386,7 @@
 
       const vsComputerCheckbox = document.getElementById('vsComputer');
       const computerSideSelect = document.getElementById('computerSide');
+      const themeToggleBtn = document.getElementById('themeToggle');
 
       const WINNING_COMBOS = [
         [0, 1, 2],
@@ -386,10 +434,18 @@
           maybeTriggerComputerTurn();
         });
 
+        // theme toggle hookup
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener('click', toggleTheme);
+        }
+
         // set defaults in UI
         vsComputerCheckbox.checked = vsComputer;
         computerSideSelect.value = computerSide;
         computerSideSelect.disabled = !vsComputer;
+
+        // sync theme button with current theme
+        applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
@@ -588,6 +644,36 @@
         scoreXEl.textContent = 'X: ' + SCORE.X;
         scoreOEl.textContent = 'O: ' + SCORE.O;
         scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+      }
+
+      // THEME HELPERS
+      function applyTheme(theme) {
+        try {
+          if (theme !== 'light' && theme !== 'dark') theme = 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+
+          if (!themeToggleBtn) return;
+          const isLight = theme === 'light';
+          themeToggleBtn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
+          themeToggleBtn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+          themeToggleBtn.textContent = isLight ? '☀️' : '🌙';
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      function toggleTheme() {
+        try {
+          const current = document.documentElement.getAttribute('data-theme') || 'dark';
+          const next = current === 'light' ? 'dark' : 'light';
+          localStorage.setItem('ttt_theme', next);
+          applyTheme(next);
+        } catch (e) {
+          // ignore storage errors
+          const current = document.documentElement.getAttribute('data-theme') || 'dark';
+          const next = current === 'light' ? 'dark' : 'light';
+          applyTheme(next);
+        }
       }
 
       // AI helpers
