@@ -498,6 +498,7 @@
 
         // show overlay
         splashOverlay.setAttribute('aria-hidden', 'false');
++        splashCard.setAttribute('aria-hidden', 'false');
         splashOverlay.classList.add('splash__overlay--visible');
 
         // focus the overlay so screen reader users land on it
@@ -523,7 +524,9 @@
         }
 
         splashOverlay.classList.remove('splash__overlay--visible');
-        splashOverlay.setAttribute('aria-hidden', 'true');
+-        splashOverlay.setAttribute('aria-hidden', 'true');
++        splashOverlay.setAttribute('aria-hidden', 'true');
++        splashCard.setAttribute('aria-hidden', 'true');
 
         // small delay to allow opacity transition to finish before resetting game
         setTimeout(function () {
