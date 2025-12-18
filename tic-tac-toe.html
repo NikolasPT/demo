@@ -166,25 +166,55 @@
 
     function handleCellClick(e){
       const idx = Number(e.currentTarget.getAttribute('data-index'));
+      // Ensure the clicked cell becomes the active tab stop and gets focus
+      focusCell(idx);
       makeMove(idx);
     }
 
-    // Keyboard navigation and activation
+    // Keyboard navigation and activation (grid-aware)
     function handleCellKeyDown(e){
       const el = e.currentTarget;
       const idx = Number(el.getAttribute('data-index'));
+
+      // Activation keys: Enter or Space (including older 'Spacebar')
+      if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space'){
+        e.preventDefault();
+        makeMove(idx);
+        return;
+      }
+
+      const row = Math.floor(idx / 3);
+      const col = idx % 3;
+
       switch(e.key){
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          makeMove(idx);
-          break;
         case 'ArrowLeft':
-        case 'ArrowUp':
-          e.preventDefault(); focusCell((idx+8)%9); break;
+          e.preventDefault();
+          {
+            const newCol = col === 0 ? 2 : col - 1;
+            focusCell(row * 3 + newCol);
+          }
+          break;
         case 'ArrowRight':
+          e.preventDefault();
+          {
+            const newCol = col === 2 ? 0 : col + 1;
+            focusCell(row * 3 + newCol);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          {
+            const newRow = row === 0 ? 2 : row - 1;
+            focusCell(newRow * 3 + col);
+          }
+          break;
         case 'ArrowDown':
-          e.preventDefault(); focusCell((idx+1)%9); break;
+          e.preventDefault();
+          {
+            const newRow = row === 2 ? 0 : row + 1;
+            focusCell(newRow * 3 + col);
+          }
+          break;
         case 'Home':
           e.preventDefault(); focusCell(0); break;
         case 'End':
@@ -206,6 +236,9 @@
       if(board[idx]) return; // occupied
       board[idx] = currentPlayer;
       renderBoard();
+      // ensure the cell remains focused after move
+      focusCell(idx);
+
       const result = checkWin();
       if(result.winner){
         gameActive = false;
@@ -213,12 +246,14 @@
         updateStatus(`Player ${result.winner} wins!`);
         score[result.winner]++;
         renderScore();
+        saveScore(); // persist immediately
         return;
       }
       if(board.every(cell=>cell)){
         gameActive = false;
         score.draws++;
         renderScore();
+        saveScore(); // persist immediately
         updateStatus("It's a draw.");
         return;
       }
@@ -268,6 +303,8 @@
       cells.forEach((c,i)=> c.setAttribute('tabindex', i===0? '0':'-1'));
       renderBoard();
       updateStatus(`Player ${currentPlayer}'s turn`);
+      // focus first cell for keyboard users
+      focusCell(0);
     }
 
     // Toggle which player starts next round
@@ -295,12 +332,9 @@
       resetGame();
       restartBtn.addEventListener('click', ()=>{ resetGame(); });
       toggleStartBtn.addEventListener('click', ()=>{ toggleStartingPlayer(); resetGame(); });
-      // Save score whenever window unloads or score changes
-      const observer = new MutationObserver(()=> saveScore());
-      observer.observe(scoreboardEl, {childList:true, characterData:true, subtree:true});
 
-      // Announce initial status
-      updateStatus('Player X\'s turn');
+      // initial toggle button label
+      toggleStartBtn.textContent = `Start: ${startingPlayer}`;
     }
 
     // Start
