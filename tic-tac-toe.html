@@ -212,29 +212,18 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + currentPlayer + ' wins!');
+          updateStatus('Player ' + currentPlayer + ' wins! Click New Game to play again.');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
-
-          // brief pause to show final board, then start next round
-          setTimeout(function () {
-            resetGame();
-            try { cellEls[0].focus(); } catch (e) { /* ignore */ }
-          }, 800);
 
           return;
         }
 
         if (checkDraw()) {
           isGameActive = false;
-          updateStatus('Draw!');
+          updateStatus('Draw! Click New Game to play again.');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
-
-          setTimeout(function () {
-            resetGame();
-            try { cellEls[0].focus(); } catch (e) { /* ignore */ }
-          }, 800);
 
           return;
         }
