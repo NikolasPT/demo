@@ -8,9 +8,13 @@
     :root {
       /* palette / tokens (dark default) */
       --bg: #0f1724;
+      --bg-end: #071021;
       --panel-bg: rgba(255,255,255,0.02);
       --cell-bg: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
       --cell-border: rgba(255,255,255,0.04);
+      --surface-elev-1: rgba(255,255,255,0.02);
+      --btn-border-color: rgba(255,255,255,0.06);
+      --shadow: rgba(2,6,23,0.6);
       --text-color: #e6eef8;
       --muted: #94a3b8;
       --x: #e11d48;
@@ -23,9 +27,13 @@
     /* Light theme overrides */
     [data-theme="light"] {
       --bg: #f8fafc;
+      --bg-end: #f8fafc;
       --panel-bg: rgba(2,6,23,0.03);
       --cell-bg: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
       --cell-border: rgba(2,6,23,0.06);
+      --surface-elev-1: rgba(2,6,23,0.03);
+      --btn-border-color: rgba(2,6,23,0.06);
+      --shadow: rgba(2,6,23,0.12);
       --text-color: #071021;
       --muted: #475569;
       --x: #b91c1c;
@@ -43,7 +51,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      background: linear-gradient(180deg, var(--bg), var(--bg-end) 120%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -57,7 +65,7 @@
       background: var(--panel-bg);
       border-radius: 12px;
       padding: 20px 20px 28px;
-      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+      box-shadow: 0 6px 30px var(--shadow);
     }
 
     header {
@@ -69,6 +77,8 @@
     }
 
     h1 { font-size: 20px; margin: 0; }
+
+    .ttt__header-controls { display:flex; align-items:center; gap:12px; }
 
     .ttt__status { display: flex; flex-direction: column; align-items: flex-end; }
     .ttt__status-msg { font-weight: 600; }
@@ -112,16 +122,13 @@
 
     .ttt__btn {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid var(--btn-border-color);
       color: inherit;
       padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
-
-    /* adjust button border color in light theme */
-    [data-theme="light"] .ttt__btn { border-color: rgba(2,6,23,0.06); }
 
     .ttt__btn--primary {
       background: linear-gradient(90deg, var(--btn-primary-start), var(--btn-primary-end));
@@ -130,7 +137,7 @@
     }
 
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
-    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
+    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: var(--surface-elev-1); padding: 6px 8px; border-radius: 8px; }
 
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
@@ -142,7 +149,7 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-      <div style="display:flex; align-items:center; gap:12px;">
+      <div class="ttt__header-controls">
         <button id="themeToggle" class="ttt__btn" title="Toggle theme" aria-pressed="false" aria-label="Switch to light theme">🌙</button>
         <div class="ttt__status">
           <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player X's turn</div>
