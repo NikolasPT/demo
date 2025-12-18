@@ -1,56 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang=\"en\">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
   <title>Tic Tac Toe</title>
   <style>
     :root {
       --bg: #0f1724;
-      --accent: #7c3aed;
       --x: #e11d48;
       --o: #06b6d4;
       --muted: #94a3b8;
-      --win-bg: rgba(28,197,138,0.12);
       color-scheme: dark;
-
-      --mark-min: 2rem;
-      --mark-vw-factor: 10vw;
-      --mark-max: 7rem;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html,
-    body {
-      height: 100%;
-    }
-
+    html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system,
-        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(180deg, var(--bg), #071021 120%);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       color: #e6eef8;
-      transition: background 220ms ease, color 220ms ease;
     }
 
     .ttt__container {
       width: 100%;
       max-width: 720px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02),
-                   rgba(255,255,255,0.01));
+      background: rgba(255,255,255,0.02);
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
-      transition: background 220ms ease, color 220ms ease,
-        box-shadow 220ms ease;
     }
 
     header {
@@ -61,25 +46,11 @@
       margin-bottom: 14px;
     }
 
-    h1 {
-      font-size: 20px;
-      margin: 0;
-    }
+    h1 { font-size: 20px; margin: 0; }
 
-    .ttt__status {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .ttt__status-msg {
-      font-weight: 600;
-    }
-
-    .ttt__status-sub {
-      font-size: 13px;
-      color: var(--muted);
-    }
+    .ttt__status { display: flex; flex-direction: column; align-items: flex-end; }
+    .ttt__status-msg { font-weight: 600; }
+    .ttt__status-sub { font-size: 13px; color: var(--muted); }
 
     .ttt__board {
       display: grid;
@@ -97,88 +68,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Make X/O scale responsively to the cell and viewport using clamp */
-      font-size: clamp(var(--mark-min), var(--mark-vw-factor), var(--mark-max));
+      font-size: clamp(2rem, 10vw, 7rem);
       line-height: 1;
       font-weight: 700;
       color: var(--muted);
       cursor: pointer;
-      transition: transform 0.08s ease, background 0.12s,
-        border-color 180ms ease, color 180ms ease;
       user-select: none;
     }
 
-    .ttt__cell:hover { transform: translateY(-3px); }
+    .ttt__cell:focus { outline: 3px solid rgba(124,58,237,0.18); }
 
-    .ttt__cell:focus {
-      outline: 3px solid rgba(124,58,237,0.18);
-      transform: scale(1.02);
-    }
-
-    .ttt__cell--x {
-      color: var(--x);
-    }
-
-    .ttt__cell--o {
-      color: var(--o);
-    }
-
-    .ttt__cell--win {
-      background: var(--win-bg);
-      box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset;
-      /* gentle pulsing animation for winning cells */
-      animation: win-pulse 1200ms ease-in-out infinite;
-    }
-
-    /* Placed mark pop animation */
-    @keyframes mark-pop {
-      0% {
-        transform: scale(0.4) rotate(-10deg);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.08) rotate(4deg);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1) rotate(0deg);
-        opacity: 1;
-      }
-    }
-
-    .ttt__cell--placed {
-      animation: mark-pop 300ms cubic-bezier(.2,.9,.2,1) both;
-    }
-
-    /* Winning pulse */
-    @keyframes win-pulse {
-      0% { box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset; }
-      50% { box-shadow: 0 12px 32px rgba(124,58,237,0.12) inset; }
-      100% { box-shadow: 0 6px 18px rgba(2,6,23,0.6) inset; }
-    }
-
-    /* Computer hint pulse - optimized to use transform/opacity for better performance */
-    @keyframes hint-pulse {
-      0% { transform: scale(1); opacity: 1; box-shadow: none; }
-      50% { transform: scale(1.04); opacity: 0.98; box-shadow: 0 0 10px rgba(124,58,237,0.04); }
-      100% { transform: scale(1); opacity: 1; box-shadow: none; }
-    }
-
-    .ttt__cell--hint {
-      animation: hint-pulse 700ms ease-in-out infinite;
-      border-color: rgba(124,58,237,0.22);
-      /* avoid the hint affecting layout; use transform instead */
-      will-change: transform, opacity;
-    }
-
-    /* Respect user preference for reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      .ttt__cell--placed,
-      .ttt__cell--hint,
-      .ttt__cell--win {
-        animation: none !important;
-      }
-    }
+    .ttt__cell--x { color: var(--x); }
+    .ttt__cell--o { color: var(--o); }
 
     .ttt__controls {
       display: flex;
@@ -194,73 +95,21 @@
       padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 160ms ease, border-color 160ms ease,
-        color 160ms ease;
+      transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
 
     .ttt__btn--primary {
-      background: linear-gradient(90deg, var(--accent), #4f46e5);
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
       border: none;
       color: white;
     }
 
-    .ttt__score {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .ttt__score-item {
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-      background: rgba(255,255,255,0.02);
-      padding: 6px 8px;
-      border-radius: 8px;
-    }
-
-    /* New small controls styling */
-    .ttt__ai-controls {
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      margin-left: 12px;
-    }
-
-    .ttt__ai-controls label {
-      font-size: 13px;
-      color: var(--muted);
-      display: inline-flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .ttt__select {
-      background: transparent;
-      color: inherit;
-      border: 1px solid rgba(255,255,255,0.06);
-      padding: 6px 8px;
-      border-radius: 8px;
-      font-size: 13px;
-    }
+    .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
+    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
     @media (max-width: 420px) {
-      :root {
-        --mark-vw-factor: 18vw;
-      }
-
-      h1 {
-        font-size: 16px;
-      }
-
-      .ttt__controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .ttt__ai-controls { margin-left: 0; }
+      :root { --mark-vw-factor: 18vw; }
+      .ttt__container { padding: 14px; }
     }
   </style>
 </head>
@@ -268,14 +117,9 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-
       <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">
-          Player X's turn
-        </div>
-        <div class="ttt__status-sub">
-          Click a cell or use keyboard (Tab + Enter/Space)
-        </div>
+        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player X's turn</div>
+        <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
       </div>
     </header>
 
@@ -283,11 +127,9 @@
       <button class="ttt__cell" data-index="0" aria-label="Row 1, Column 1, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="1" aria-label="Row 1, Column 2, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="2" aria-label="Row 1, Column 3, empty" aria-pressed="false"></button>
-
       <button class="ttt__cell" data-index="3" aria-label="Row 2, Column 1, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="4" aria-label="Row 2, Column 2, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="5" aria-label="Row 2, Column 3, empty" aria-pressed="false"></button>
-
       <button class="ttt__cell" data-index="6" aria-label="Row 3, Column 1, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="7" aria-label="Row 3, Column 2, empty" aria-pressed="false"></button>
       <button class="ttt__cell" data-index="8" aria-label="Row 3, Column 3, empty" aria-pressed="false"></button>
@@ -301,27 +143,8 @@
       </div>
 
       <div>
-        <button id="newGame" class="ttt__btn ttt__btn--primary">
-          New Game
-        </button>
-        <button id="resetScores" class="ttt__btn" title="Reset scores">
-          Reset Scores
-        </button>
-
-        <span class="ttt__ai-controls">
-          <label>
-            <input id="vsComputer" type="checkbox" aria-label="Play vs Computer" />
-            Play vs Computer
-          </label>
-
-          <label>
-            <span class="ttt__status-sub">Side:</span>
-            <select id="computerSide" class="ttt__select" aria-label="Computer plays as X or O">
-              <option value="X">X</option>
-              <option value="O" selected>O</option>
-            </select>
-          </label>
-        </span>
+        <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
+        <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
       </div>
     </div>
   </main>
@@ -329,7 +152,6 @@
   <script>
     (function () {
       const cellEls = Array.from(document.querySelectorAll('.ttt__cell'));
-
       const statusEl = document.getElementById('statusMsg');
       const newGameBtn = document.getElementById('newGame');
       const resetScoresBtn = document.getElementById('resetScores');
@@ -337,18 +159,10 @@
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
 
-      const vsComputerCheckbox = document.getElementById('vsComputer');
-      const computerSideSelect = document.getElementById('computerSide');
-
       const WINNING_COMBOS = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
       ];
 
       let board = Array(9).fill('');
@@ -356,46 +170,15 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
-      // Computer opponent state
-      let vsComputer = false;
-      let computerSide = 'O';
-      let computerMoveTimeout = null;
-
       function init() {
-        // initialize board and controls
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
         });
-
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
-
-        vsComputerCheckbox.addEventListener('change', (e) => {
-          vsComputer = e.target.checked;
-          computerSideSelect.disabled = !vsComputer;
-
-          // If enabling vsComputer and it's computer's turn, trigger move
-          maybeTriggerComputerTurn();
-        });
-
-        computerSideSelect.addEventListener('change', (e) => {
-          computerSide = e.target.value;
-
-          // If computer is now set to start and vsComputer is on, trigger
-          maybeTriggerComputerTurn();
-        });
-
-        // set defaults in UI
-        vsComputerCheckbox.checked = vsComputer;
-        computerSideSelect.value = computerSide;
-        computerSideSelect.disabled = !vsComputer;
-
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
-
-        // If the computer should start (e.g. computer plays X), trigger
-        maybeTriggerComputerTurn();
       }
 
       function onCellKeyDown(e) {
@@ -407,134 +190,60 @@
 
       function onCellClick(e) {
         const idx = Number(e.currentTarget.dataset.index);
-
         if (!isGameActive) return;
-
-        // Prevent human from playing on the computer's turn
-        if (vsComputer && currentPlayer === computerSide) return;
-
         if (board[idx]) return;
-
-        applyMoveAndAdvance(idx);
+        placeMove(idx);
       }
 
-      function applyMoveAndAdvance(idx) {
-        // Place move
+      function placeMove(idx) {
         board[idx] = currentPlayer;
-        updateCellUI(idx, true);
+        updateCellUI(idx);
 
-        // Check win
         if (checkWin()) {
           isGameActive = false;
-          const winnerLabel = (vsComputer && currentPlayer === computerSide) ? ('Computer (' + currentPlayer + ')') : ('Player ' + currentPlayer);
-          updateStatus(winnerLabel + ' wins!');
+          updateStatus('Player ' + currentPlayer + ' wins!');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
-
-          // cancel any pending computer move and hints
-          if (computerMoveTimeout) {
-            clearTimeout(computerMoveTimeout);
-            computerMoveTimeout = null;
-          }
-          removeAllHints();
           return;
         }
 
-        // Check draw
         if (checkDraw()) {
           isGameActive = false;
           updateStatus('Draw!');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
-
-          if (computerMoveTimeout) {
-            clearTimeout(computerMoveTimeout);
-            computerMoveTimeout = null;
-          }
-          removeAllHints();
           return;
         }
 
-        // Continue game
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-        // Update status: if computer turn, announce computer's turn
-        if (vsComputer && currentPlayer === computerSide) {
-          updateStatus("Computer's turn");
-          // schedule computer move
-          maybeTriggerComputerTurn();
-        } else {
-          updateStatus('Player ' + currentPlayer + "'s turn");
-        }
+        updateStatus("Player " + currentPlayer + "'s turn");
       }
 
-      // Update a single cell UI. animate=true will run the pop-in animation.
-      function updateCellUI(idx, animate = false) {
+      function updateCellUI(idx) {
         const cell = cellEls[idx];
-
         cell.textContent = board[idx];
-
-        cell.classList.remove('ttt__cell--x');
-        cell.classList.remove('ttt__cell--o');
-
+        cell.classList.remove('ttt__cell--x','ttt__cell--o');
         if (board[idx]) {
           cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
         }
-
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-
-        cell.setAttribute(
-          'aria-label',
-          'Row ' + row + ', Column ' + col + ', ' + board[idx]
-        );
-
+        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
-
-        if (animate && board[idx]) {
-          // ensure we can re-trigger the animation if class was recently used
-          cell.classList.remove('ttt__cell--placed');
-          // force reflow so the animation restarts reliably
-          void cell.offsetWidth;
-          cell.classList.add('ttt__cell--placed');
-
-          const onAnimEnd = () => {
-            cell.classList.remove('ttt__cell--placed');
-          };
-
-          cell.addEventListener('animationend', onAnimEnd, { once: true });
-        }
       }
 
       function checkWin() {
         for (const combo of WINNING_COMBOS) {
-          const a = combo[0];
-          const b = combo[1];
-          const c = combo[2];
-
-          if (
-            board[a] &&
-            board[a] === board[b] &&
-            board[a] === board[c]
-          ) {
-            highlightWin(combo);
+          const a = combo[0], b = combo[1], c = combo[2];
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
             return true;
           }
         }
-
         return false;
       }
 
-      function highlightWin(combo) {
-        combo.forEach(i => {
-          cellEls[i].classList.add('ttt__cell--win');
-        });
-      }
-
       function checkDraw() {
-        return board.every(cell => {
-          return cell;
-        });
+        return board.every(v => v);
       }
 
       function updateStatus(text) {
@@ -542,46 +251,22 @@
       }
 
       function resetGame() {
-        // clear any pending computer action
-        if (computerMoveTimeout) {
-          clearTimeout(computerMoveTimeout);
-          computerMoveTimeout = null;
-        }
-
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
-
         cellEls.forEach((cell, i) => {
           cell.textContent = '';
-          cell.classList.remove('ttt__cell--x');
-          cell.classList.remove('ttt__cell--o');
-          cell.classList.remove('ttt__cell--win');
-          cell.classList.remove('ttt__cell--placed');
-          cell.classList.remove('ttt__cell--hint');
-
-          const r = Math.floor(i / 3) + 1;
-          const c = (i % 3) + 1;
-          cell.setAttribute(
-            'aria-label',
-            'Row ' + r + ', Column ' + c + ', empty'
-          );
-
+          cell.classList.remove('ttt__cell--x','ttt__cell--o');
+          const r = Math.floor(i / 3) + 1; const c = (i % 3) + 1;
+          cell.setAttribute('aria-label', 'Row ' + r + ', Column ' + c + ', empty');
           cell.setAttribute('aria-pressed', 'false');
         });
-
         updateStatus("Player " + currentPlayer + "'s turn");
-        cellEls[0].focus();
-
-        // If computer should start after reset
-        maybeTriggerComputerTurn();
+        render();
       }
 
       function resetScores() {
-        SCORE.X = 0;
-        SCORE.O = 0;
-        SCORE.draws = 0;
-        updateScoreUI();
+        SCORE.X = 0; SCORE.O = 0; SCORE.draws = 0; updateScoreUI();
       }
 
       function updateScoreUI() {
@@ -590,141 +275,13 @@
         scoreDEl.textContent = 'Draws: ' + SCORE.draws;
       }
 
-      // AI helpers
-      function getAvailableMoves() {
-        const moves = [];
-        board.forEach((v, i) => { if (!v) moves.push(i); });
-        return moves;
-      }
-
-      function findWinningMoveFor(player) {
-        for (const combo of WINNING_COMBOS) {
-          const [a, b, c] = combo;
-          const vals = [board[a], board[b], board[c]];
-
-          // if two are player and one empty -> winning/blocking move
-          const countPlayer = vals.filter(v => v === player).length;
-          const emptyIndex = combo.find(i => !board[i]);
-
-          if (countPlayer === 2 && emptyIndex !== undefined) {
-            return emptyIndex;
-          }
-        }
-        return null;
-      }
-
-      // Compute a tentative computer move deterministically for hinting
-      function computeTentativeComputerMove() {
-        const opponent = computerSide === 'X' ? 'O' : 'X';
-
-        // 1) Win if possible
-        let move = findWinningMoveFor(computerSide);
-        // 2) Block opponent's win
-        if (move === null) move = findWinningMoveFor(opponent);
-        // 3) Take center
-        if (move === null && !board[4]) move = 4;
-        // 4) Take first available corner (deterministic)
-        const corners = [0,2,6,8].filter(i => !board[i]);
-        if (move === null && corners.length) move = corners[0];
-        // 5) Fallback first available
-        const avail = getAvailableMoves();
-        if (move === null && avail.length) move = avail[0];
-
-        return move;
-      }
-
-      function removeAllHints() {
-        cellEls.forEach(c => c.classList.remove('ttt__cell--hint'));
-      }
-
-      function maybeTriggerComputerTurn() {
-        // clear any existing scheduled move/hints first
-        if (computerMoveTimeout) {
-          clearTimeout(computerMoveTimeout);
-          computerMoveTimeout = null;
-        }
-
-        removeAllHints();
-
-        if (!vsComputer || !isGameActive) return;
-        if (currentPlayer !== computerSide) return;
-
-        // Announce computer turn
-        updateStatus("Computer's turn");
-
-        // compute tentative move and show hint
-        const tentative = computeTentativeComputerMove();
-        if (tentative !== null && tentative !== undefined) {
-          const target = cellEls[tentative];
-          if (target && !board[tentative]) {
-            target.classList.add('ttt__cell--hint');
-          }
-        }
-
-        computerMoveTimeout = setTimeout(() => {
-          computerMoveTimeout = null;
-          // remove any hint visuals before making move
-          removeAllHints();
-          computerMakeMove();
-        }, 350);
-      }
-
-      function computerMakeMove() {
-        if (!isGameActive) return;
-        if (!vsComputer) return;
-        if (currentPlayer !== computerSide) return;
-
-        // remove hints in case they're present
-        removeAllHints();
-
-        const opponent = currentPlayer === 'X' ? 'O' : 'X';
-
-        // 1) Win if possible
-        let move = findWinningMoveFor(currentPlayer);
-        // 2) Block opponent's win
-        if (move === null) move = findWinningMoveFor(opponent);
-        // 3) Take center
-        if (move === null && !board[4]) move = 4;
-        // 4) Take any corner
-        const corners = [0,2,6,8].filter(i => !board[i]);
-        if (move === null && corners.length) move = corners[Math.floor(Math.random()*corners.length)];
-        // 5) Fallback random available
-        const avail = getAvailableMoves();
-        if (move === null && avail.length) move = avail[Math.floor(Math.random()*avail.length)];
-
-        if (move !== null && move !== undefined) {
-          applyMoveAndAdvance(move);
-        }
-      }
-
       function render() {
         cellEls.forEach((cell, i) => {
           const val = board[i];
-
           cell.textContent = val;
-
-          if (val) {
-            cell.classList.add('ttt__cell--' + val.toLowerCase());
-            cell.setAttribute('aria-pressed', 'true');
-
-            const row = Math.floor(i / 3) + 1;
-            const col = (i % 3) + 1;
-
-            cell.setAttribute(
-              'aria-label',
-              'Row ' + row + ', Column ' + col + ', ' + val
-            );
-          } else {
-            const row = Math.floor(i / 3) + 1;
-            const col = (i % 3) + 1;
-
-            cell.setAttribute(
-              'aria-label',
-              'Row ' + row + ', Column ' + col + ', empty'
-            );
-          }
+          cell.classList.remove('ttt__cell--x','ttt__cell--o');
+          if (val) cell.classList.add('ttt__cell--' + val.toLowerCase());
         });
-
         updateScoreUI();
       }
 
@@ -733,6 +290,7 @@
       } else {
         init();
       }
+
     })();
   </script>
 </body>
