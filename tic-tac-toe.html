@@ -114,8 +114,8 @@
       .ttt__container { padding: 14px; }
     }
 
-    /* Splash overlay styles */
-    .splash-overlay {
+    /* Splash overlay styles (BEM: block = splash) */
+    .splash__overlay {
       position: fixed;
       inset: 0;
       display: flex;
@@ -129,12 +129,12 @@
       z-index: 60;
     }
 
-    .splash-overlay.visible {
+    .splash__overlay--visible {
       opacity: 1;
       pointer-events: auto;
     }
 
-    .splash-card {
+    .splash__card {
       width: min(560px, calc(100% - 48px));
       background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
       border-radius: 14px;
@@ -150,9 +150,11 @@
       gap: 12px;
       align-items: center;
       justify-content: center;
+      position: relative;
+      z-index: 61;
     }
 
-    .splash-card .splash-icon {
+    .splash__icon {
       width: 84px;
       height: 84px;
       border-radius: 50%;
@@ -162,46 +164,71 @@
       color: white;
       box-shadow: 0 6px 30px rgba(0,0,0,0.5);
       transform: translateY(-2px);
+      position: relative; /* ensure pseudo-element positions relative to this */
+      z-index: 1; /* stacking context for decorative glow */
     }
 
-    .splash-message {
+    .splash__message {
       font-size: 20px;
       font-weight: 700;
       letter-spacing: -0.02em;
     }
 
-    .splash-sub {
+    .splash__sub {
       color: var(--muted);
       font-size: 14px;
     }
 
     /* Variants */
-    .splash-card.success .splash-icon { background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 8px 40px rgba(16,185,129,0.18); }
-    .splash-card.lose .splash-icon { background: linear-gradient(90deg, #ef476f, #f43f5e); box-shadow: 0 8px 40px rgba(239,71,111,0.18); }
-    .splash-card.draw .splash-icon { background: linear-gradient(90deg, #6b7280, #9ca3af); box-shadow: 0 8px 40px rgba(99,102,106,0.12); }
+    .splash__card--success .splash__icon {
+      background: linear-gradient(90deg, #10b981, #34d399);
+      box-shadow: 0 8px 40px rgba(16,185,129,0.18);
+    }
+
+    .splash__card--lose .splash__icon {
+      background: linear-gradient(90deg, #ef476f, #f43f5e);
+      box-shadow: 0 8px 40px rgba(239,71,111,0.18);
+    }
+
+    .splash__card--draw .splash__icon {
+      background: linear-gradient(90deg, #6b7280, #9ca3af);
+      box-shadow: 0 8px 40px rgba(99,102,106,0.12);
+    }
 
     /* Small decorative pulse */
-    .splash-card.success .splash-icon::after,
-    .splash-card.lose .splash-icon::after,
-    .splash-card.draw .splash-icon::after {
+    .splash__icon::after {
       content: '';
       position: absolute;
+      left: 50%;
+      top: 50%;
       width: 140px;
       height: 140px;
       border-radius: 50%;
       opacity: 0;
-      transform: scale(.7);
-      z-index: -1;
+      transform: translate(-50%, -50%) scale(.7);
+      pointer-events: none;
+      z-index: 0; /* behind the icon but inside the card */
     }
 
-    .splash-card.success .splash-icon::after { background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 40%); animation: pulse 1600ms infinite; }
-    .splash-card.lose .splash-icon::after { background: radial-gradient(circle, rgba(239,71,111,0.12), transparent 40%); animation: pulse 1600ms infinite; }
-    .splash-card.draw .splash-icon::after { background: radial-gradient(circle, rgba(99,102,106,0.08), transparent 40%); animation: pulse 1600ms infinite; }
+    .splash__card--success .splash__icon::after {
+      background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 40%);
+      animation: pulse 1600ms infinite;
+    }
+
+    .splash__card--lose .splash__icon::after {
+      background: radial-gradient(circle, rgba(239,71,111,0.12), transparent 40%);
+      animation: pulse 1600ms infinite;
+    }
+
+    .splash__card--draw .splash__icon::after {
+      background: radial-gradient(circle, rgba(99,102,106,0.08), transparent 40%);
+      animation: pulse 1600ms infinite;
+    }
 
     @keyframes pulse {
-      0% { opacity: 0.12; transform: scale(.8); }
-      50% { opacity: 0.04; transform: scale(1); }
-      100% { opacity: 0.12; transform: scale(.8); }
+      0% { opacity: 0.12; transform: translate(-50%, -50%) scale(.8); }
+      50% { opacity: 0.04; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0.12; transform: translate(-50%, -50%) scale(.8); }
     }
 
     @keyframes splashIn {
@@ -212,9 +239,9 @@
 
     /* Ensure overlay content is responsive */
     @media (max-width: 420px) {
-      .splash-card { padding: 20px; }
-      .splash-card .splash-icon { width: 64px; height: 64px; font-size: 28px; }
-      .splash-message { font-size: 18px; }
+      .splash__card { padding: 20px; }
+      .splash__icon { width: 64px; height: 64px; font-size: 28px; }
+      .splash__message { font-size: 18px; }
     }
   </style>
 </head>
@@ -254,12 +281,12 @@
     </div>
   </main>
 
-  <!-- Splash overlay shown after each game result -->
-  <div id="splashOverlay" class="splash-overlay" aria-hidden="true" aria-live="polite" role="status">
-    <div id="splashCard" class="splash-card" role="status">
-      <div id="splashIcon" class="splash-icon" aria-hidden="true">✓</div>
-      <div id="splashMessage" class="splash-message">Congratulations, you won</div>
-      <div id="splashSub" class="splash-sub">Starting next round...</div>
+  <!-- Splash overlay shown after each game result (BEM classes) -->
+  <div id="splashOverlay" class="splash__overlay" aria-hidden="true" tabindex="-1">
+    <div id="splashCard" class="splash__card" aria-hidden="true">
+      <div id="splashIcon" class="splash__icon" aria-hidden="true">✓</div>
+      <div id="splashMessage" class="splash__message" role="status" aria-live="polite">Congratulations, you won</div>
+      <div id="splashSub" class="splash__sub">Starting next round...</div>
     </div>
   </div>
 
@@ -273,7 +300,7 @@
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
 
-      // Splash elements
+      // Splash elements (IDs kept for JS referencing)
       const splashOverlay = document.getElementById('splashOverlay');
       const splashCard = document.getElementById('splashCard');
       const splashMessage = document.getElementById('splashMessage');
@@ -292,10 +319,11 @@
       let splashTimeout = null;
 
       function init() {
-        cellEls.forEach(cell => {
+        cellEls.forEach(function (cell) {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
         });
+
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
         updateStatus("Player " + currentPlayer + "'s turn");
@@ -311,8 +339,15 @@
 
       function onCellClick(e) {
         const idx = Number(e.currentTarget.dataset.index);
-        if (!isGameActive) return;
-        if (board[idx]) return;
+
+        if (!isGameActive) {
+          return;
+        }
+
+        if (board[idx]) {
+          return;
+        }
+
         placeMove(idx);
       }
 
@@ -349,29 +384,38 @@
 
       function updateCellUI(idx) {
         const cell = cellEls[idx];
-        cell.textContent = board[idx];
+        const val = board[idx];
+        cell.textContent = val;
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
-        if (board[idx]) {
-          cell.classList.add('ttt__cell--' + board[idx].toLowerCase());
+
+        if (val) {
+          cell.classList.add('ttt__cell--' + val.toLowerCase());
         }
+
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
+        const label = 'Row ' + row + ', Column ' + col + ', ' + (board[idx] || 'empty');
+        cell.setAttribute('aria-label', label);
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
 
       function checkWin() {
-        for (const combo of WINNING_COMBOS) {
-          const a = combo[0], b = combo[1], c = combo[2];
+        for (let i = 0; i < WINNING_COMBOS.length; i++) {
+          const combo = WINNING_COMBOS[i];
+          const a = combo[0];
+          const b = combo[1];
+          const c = combo[2];
+
           if (board[a] && board[a] === board[b] && board[a] === board[c]) {
             return true;
           }
         }
+
         return false;
       }
 
       function checkDraw() {
-        return board.every(v => v);
+        return board.every(function (v) { return v; });
       }
 
       function updateStatus(text) {
@@ -382,19 +426,27 @@
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
-        cellEls.forEach((cell, i) => {
+
+        cellEls.forEach(function (cell, i) {
           cell.textContent = '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
-          const r = Math.floor(i / 3) + 1; const c = (i % 3) + 1;
+
+          const r = Math.floor(i / 3) + 1;
+          const c = (i % 3) + 1;
+
           cell.setAttribute('aria-label', 'Row ' + r + ', Column ' + c + ', empty');
           cell.setAttribute('aria-pressed', 'false');
         });
+
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
       }
 
       function resetScores() {
-        SCORE.X = 0; SCORE.O = 0; SCORE.draws = 0; updateScoreUI();
+        SCORE.X = 0;
+        SCORE.O = 0;
+        SCORE.draws = 0;
+        updateScoreUI();
       }
 
       function updateScoreUI() {
@@ -404,24 +456,36 @@
       }
 
       function render() {
-        cellEls.forEach((cell, i) => {
+        cellEls.forEach(function (cell, i) {
           const val = board[i];
           cell.textContent = val;
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
-          if (val) cell.classList.add('ttt__cell--' + val.toLowerCase());
+
+          if (val) {
+            cell.classList.add('ttt__cell--' + val.toLowerCase());
+          }
         });
+
         updateScoreUI();
       }
 
       // Splash control functions
       function showSplash(message, type) {
-        // clear previous timeout if any
-        if (splashTimeout) clearTimeout(splashTimeout);
+        if (splashTimeout) {
+          clearTimeout(splashTimeout);
+        }
 
         // set message and variant
         splashMessage.textContent = message;
-        splashCard.classList.remove('success','lose','draw');
-        splashCard.classList.add(type);
+
+        splashCard.classList.remove('splash__card--success', 'splash__card--lose', 'splash__card--draw');
+        if (type === 'success') {
+          splashCard.classList.add('splash__card--success');
+        } else if (type === 'lose') {
+          splashCard.classList.add('splash__card--lose');
+        } else {
+          splashCard.classList.add('splash__card--draw');
+        }
 
         // set icon
         if (type === 'success') {
@@ -434,32 +498,47 @@
 
         // show overlay
         splashOverlay.setAttribute('aria-hidden', 'false');
-        splashOverlay.classList.add('visible');
+        splashOverlay.classList.add('splash__overlay--visible');
+
+        // focus the overlay so screen reader users land on it
+        try {
+          splashOverlay.focus();
+        } catch (err) {
+          // ignore
+        }
 
         // prevent interactions
         isGameActive = false;
-        // blur active element to avoid accidental keyboard activation
-        try { document.activeElement && document.activeElement.blur && document.activeElement.blur(); } catch (e) {}
 
         // hide after 2 seconds and start a new game
-        splashTimeout = setTimeout(() => {
+        splashTimeout = setTimeout(function () {
           hideSplash();
         }, 2000);
       }
 
       function hideSplash() {
-        if (splashTimeout) { clearTimeout(splashTimeout); splashTimeout = null; }
-        splashOverlay.classList.remove('visible');
+        if (splashTimeout) {
+          clearTimeout(splashTimeout);
+          splashTimeout = null;
+        }
+
+        splashOverlay.classList.remove('splash__overlay--visible');
         splashOverlay.setAttribute('aria-hidden', 'true');
 
         // small delay to allow opacity transition to finish before resetting game
-        setTimeout(() => {
+        setTimeout(function () {
           // remove variant classes
-          splashCard.classList.remove('success','lose','draw');
+          splashCard.classList.remove('splash__card--success', 'splash__card--lose', 'splash__card--draw');
+
           // reset the board for next round
           resetGame();
+
           // focus first cell for accessibility
-          try { cellEls[0].focus(); } catch (e) {}
+          try {
+            cellEls[0].focus();
+          } catch (e) {
+            // ignore
+          }
         }, 260);
       }
 
