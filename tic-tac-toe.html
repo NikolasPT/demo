@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-  <meta charset=\"utf-8\">
-  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tic Tac Toe</title>
   <style>
     :root {
@@ -20,7 +20,7 @@
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(180deg, var(--bg), #071021 120%);
       display: flex;
       align-items: center;
@@ -86,6 +86,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .ttt__btn {
@@ -107,9 +108,29 @@
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
     .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
+    .ttt__opponent {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .ttt__select {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      color: inherit;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
       .ttt__container { padding: 14px; }
+      .ttt__controls { flex-direction: column; align-items: stretch; gap: 8px; }
+      .ttt__score { order: 2; }
+      .ttt__opponent { order: 1; justify-content: space-between; width: 100%; }
+      .ttt__opponent .ttt__select { min-width: 140px; }
     }
   </style>
 </head>
@@ -142,6 +163,14 @@
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
+      <div class="ttt__opponent" aria-hidden="false">
+        <label for="opponentSelect" style="font-size:13px;color:var(--muted);">Opponent:</label>
+        <select id="opponentSelect" class="ttt__select" title="Choose opponent" aria-label="Choose opponent">
+          <option value="human">Two Players</option>
+          <option value="computer">Play vs Computer</option>
+        </select>
+      </div>
+
       <div>
         <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
         <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
@@ -158,6 +187,7 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const opponentSelect = document.getElementById('opponentSelect');
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -170,6 +200,11 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      // Opponent mode state
+      let opponentMode = 'human'; // 'human' or 'computer'
+      const computerPlayer = 'O'; // computer plays O
+      let isComputerThinking = false;
+
       function init() {
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
@@ -177,8 +212,14 @@
         });
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+        opponentSelect.addEventListener('change', onOpponentChange);
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+      }
+
+      function onOpponentChange(e) {
+        opponentMode = e.target.value === 'computer' ? 'computer' : 'human';
+        resetGame();
       }
 
       function onCellKeyDown(e) {
@@ -192,10 +233,13 @@
         const idx = Number(e.currentTarget.dataset.index);
         if (!isGameActive) return;
         if (board[idx]) return;
+        if (isComputerThinking) return;
+        if (opponentMode === 'computer' && currentPlayer === computerPlayer) return;
         placeMove(idx);
       }
 
       function placeMove(idx) {
+        if (!isGameActive) return;
         board[idx] = currentPlayer;
         updateCellUI(idx);
 
@@ -217,6 +261,11 @@
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateStatus("Player " + currentPlayer + "'s turn");
+
+        // If playing against computer and it's the computer's turn, trigger its move
+        if (opponentMode === 'computer' && isGameActive && currentPlayer === computerPlayer) {
+          computerMove();
+        }
       }
 
       function updateCellUI(idx) {
@@ -228,7 +277,7 @@
         }
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + board[idx]);
+        cell.setAttribute('aria-label', 'Row ' + row + ', Column ' + col + ', ' + (board[idx] || 'empty'));
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
 
@@ -254,6 +303,7 @@
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
+        isComputerThinking = false;
         cellEls.forEach((cell, i) => {
           cell.textContent = '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
@@ -263,6 +313,8 @@
         });
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+
+        // If computer should start in future variants, trigger here.
       }
 
       function resetScores() {
@@ -283,6 +335,39 @@
           if (val) cell.classList.add('ttt__cell--' + val.toLowerCase());
         });
         updateScoreUI();
+      }
+
+      function computerMove() {
+        if (!isGameActive) return;
+        if (opponentMode !== 'computer') return;
+        if (currentPlayer !== computerPlayer) return;
+        isComputerThinking = true;
+        updateStatus('Computer is thinking...');
+
+        setTimeout(() => {
+          // Prefer center if available
+          const avail = board.map((v,i) => v ? null : i).filter(v => v !== null);
+          if (avail.length === 0) {
+            isComputerThinking = false;
+            return;
+          }
+          let choice = null;
+          if (avail.includes(4)) {
+            choice = 4;
+          } else {
+            // random available
+            choice = avail[Math.floor(Math.random() * avail.length)];
+          }
+
+          // Make sure game still active and it's still computer's turn
+          if (!isGameActive || currentPlayer !== computerPlayer) {
+            isComputerThinking = false;
+            return;
+          }
+
+          placeMove(choice);
+          isComputerThinking = false;
+        }, 350);
       }
 
       if (document.readyState === 'loading') {
