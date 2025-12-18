@@ -114,135 +114,6 @@
       .ttt__container { padding: 14px; }
     }
 
-    /* Splash overlay styles (BEM: block = splash) */
-    .splash__overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(2,6,23,0.6);
-      backdrop-filter: blur(6px) saturate(1.05);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 260ms cubic-bezier(.2,.9,.3,1);
-      z-index: 60;
-    }
-
-    .splash__overlay--visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .splash__card {
-      width: min(560px, calc(100% - 48px));
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      border-radius: 14px;
-      padding: 28px 28px;
-      text-align: center;
-      color: #fff;
-      box-shadow: 0 10px 40px rgba(2,6,23,0.7), 0 0 40px rgba(124,58,237,0.08) inset;
-      transform: scale(.92) translateY(6px);
-      opacity: 0;
-      animation: splashIn 420ms cubic-bezier(.2,.9,.3,1) forwards;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      z-index: 61;
-    }
-
-    .splash__icon {
-      width: 84px;
-      height: 84px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-size: 36px;
-      color: white;
-      box-shadow: 0 6px 30px rgba(0,0,0,0.5);
-      transform: translateY(-2px);
-      position: relative; /* ensure pseudo-element positions relative to this */
-      z-index: 1; /* stacking context for decorative glow */
-    }
-
-    .splash__message {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .splash__sub {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    /* Variants */
-    .splash__card--success .splash__icon {
-      background: linear-gradient(90deg, #10b981, #34d399);
-      box-shadow: 0 8px 40px rgba(16,185,129,0.18);
-    }
-
-    .splash__card--lose .splash__icon {
-      background: linear-gradient(90deg, #ef476f, #f43f5e);
-      box-shadow: 0 8px 40px rgba(239,71,111,0.18);
-    }
-
-    .splash__card--draw .splash__icon {
-      background: linear-gradient(90deg, #6b7280, #9ca3af);
-      box-shadow: 0 8px 40px rgba(99,102,106,0.12);
-    }
-
-    /* Small decorative pulse */
-    .splash__icon::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(.7);
-      pointer-events: none;
-      z-index: 0; /* behind the icon but inside the card */
-    }
-
-    .splash__card--success .splash__icon::after {
-      background: radial-gradient(circle, rgba(16,185,129,0.14), transparent 40%);
-      animation: pulse 1600ms infinite;
-    }
-
-    .splash__card--lose .splash__icon::after {
-      background: radial-gradient(circle, rgba(239,71,111,0.12), transparent 40%);
-      animation: pulse 1600ms infinite;
-    }
-
-    .splash__card--draw .splash__icon::after {
-      background: radial-gradient(circle, rgba(99,102,106,0.08), transparent 40%);
-      animation: pulse 1600ms infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.12; transform: translate(-50%, -50%) scale(.8); }
-      50% { opacity: 0.04; transform: translate(-50%, -50%) scale(1); }
-      100% { opacity: 0.12; transform: translate(-50%, -50%) scale(.8); }
-    }
-
-    @keyframes splashIn {
-      0% { transform: scale(.88) translateY(10px); opacity: 0; }
-      70% { transform: scale(1.02) translateY(-6px); opacity: 1; }
-      100% { transform: scale(1) translateY(0); opacity: 1; }
-    }
-
-    /* Ensure overlay content is responsive */
-    @media (max-width: 420px) {
-      .splash__card { padding: 20px; }
-      .splash__icon { width: 64px; height: 64px; font-size: 28px; }
-      .splash__message { font-size: 18px; }
-    }
   </style>
 </head>
 <body>
@@ -281,15 +152,6 @@
     </div>
   </main>
 
-  <!-- Splash overlay shown after each game result (BEM classes) -->
-  <div id="splashOverlay" class="splash__overlay" aria-hidden="true" tabindex="-1">
-    <div id="splashCard" class="splash__card" aria-hidden="true">
-      <div id="splashIcon" class="splash__icon" aria-hidden="true">✓</div>
-      <div id="splashMessage" class="splash__message" role="status" aria-live="polite">Congratulations, you won</div>
-      <div id="splashSub" class="splash__sub">Starting next round...</div>
-    </div>
-  </div>
-
   <script>
     (function () {
       const cellEls = Array.from(document.querySelectorAll('.ttt__cell'));
@@ -299,12 +161,6 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
-
-      // Splash elements (IDs kept for JS referencing)
-      const splashOverlay = document.getElementById('splashOverlay');
-      const splashCard = document.getElementById('splashCard');
-      const splashMessage = document.getElementById('splashMessage');
-      const splashIcon = document.getElementById('splashIcon');
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -316,7 +172,6 @@
       let currentPlayer = 'X';
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
-      let splashTimeout = null;
 
       function init() {
         cellEls.forEach(function (cell) {
@@ -361,11 +216,12 @@
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
-          // Determine message relative to human player (X is treated as the human)
-          const isHumanWinner = currentPlayer === 'X';
-          const message = isHumanWinner ? 'Congratulations, you won' : 'You lost, try again';
-          const type = isHumanWinner ? 'success' : 'lose';
-          showSplash(message, type);
+          // brief pause to show final board, then start next round
+          setTimeout(function () {
+            resetGame();
+            try { cellEls[0].focus(); } catch (e) { /* ignore */ }
+          }, 800);
+
           return;
         }
 
@@ -374,7 +230,12 @@
           updateStatus('Draw!');
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
-          showSplash('Draw', 'draw');
+
+          setTimeout(function () {
+            resetGame();
+            try { cellEls[0].focus(); } catch (e) { /* ignore */ }
+          }, 800);
+
           return;
         }
 
@@ -440,6 +301,9 @@
 
         updateStatus("Player " + currentPlayer + "'s turn");
         render();
+
+        // focus first cell for accessibility
+        try { cellEls[0].focus(); } catch (e) { /* ignore */ }
       }
 
       function resetScores() {
@@ -467,82 +331,6 @@
         });
 
         updateScoreUI();
-      }
-
-      // Splash control functions
-      function showSplash(message, type) {
-        if (splashTimeout) {
-          clearTimeout(splashTimeout);
-        }
-
-        // set message and variant
-        splashMessage.textContent = message;
-
-        splashCard.classList.remove('splash__card--success', 'splash__card--lose', 'splash__card--draw');
-        if (type === 'success') {
-          splashCard.classList.add('splash__card--success');
-        } else if (type === 'lose') {
-          splashCard.classList.add('splash__card--lose');
-        } else {
-          splashCard.classList.add('splash__card--draw');
-        }
-
-        // set icon
-        if (type === 'success') {
-          splashIcon.textContent = '🎉';
-        } else if (type === 'lose') {
-          splashIcon.textContent = '💔';
-        } else {
-          splashIcon.textContent = '🤝';
-        }
-
-        // show overlay
-        splashOverlay.setAttribute('aria-hidden', 'false');
-+        splashCard.setAttribute('aria-hidden', 'false');
-        splashOverlay.classList.add('splash__overlay--visible');
-
-        // focus the overlay so screen reader users land on it
-        try {
-          splashOverlay.focus();
-        } catch (err) {
-          // ignore
-        }
-
-        // prevent interactions
-        isGameActive = false;
-
-        // hide after 2 seconds and start a new game
-        splashTimeout = setTimeout(function () {
-          hideSplash();
-        }, 2000);
-      }
-
-      function hideSplash() {
-        if (splashTimeout) {
-          clearTimeout(splashTimeout);
-          splashTimeout = null;
-        }
-
-        splashOverlay.classList.remove('splash__overlay--visible');
--        splashOverlay.setAttribute('aria-hidden', 'true');
-+        splashOverlay.setAttribute('aria-hidden', 'true');
-+        splashCard.setAttribute('aria-hidden', 'true');
-
-        // small delay to allow opacity transition to finish before resetting game
-        setTimeout(function () {
-          // remove variant classes
-          splashCard.classList.remove('splash__card--success', 'splash__card--lose', 'splash__card--draw');
-
-          // reset the board for next round
-          resetGame();
-
-          // focus first cell for accessibility
-          try {
-            cellEls[0].focus();
-          } catch (e) {
-            // ignore
-          }
-        }, 260);
       }
 
       if (document.readyState === 'loading') {
