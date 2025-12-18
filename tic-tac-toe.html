@@ -9,8 +9,8 @@
   <script>
     (function(){
       try {
-        var saved = localStorage.getItem('ttt_theme');
-        var theme;
+        const saved = localStorage.getItem('ttt_theme');
+        let theme;
         if (saved === 'light' || saved === 'dark') {
           theme = saved;
         } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
@@ -27,7 +27,9 @@
 
   <style>
     :root {
-      --bg: #0f1724;
+      /* Use atomic color variables for composing gradients to avoid nested-gradient issues */
+      --bg-top: #0f1724;
+      --bg-bottom: #071021;
       --accent: #7c3aed;
       --x: #e11d48;
       --o: #06b6d4;
@@ -40,9 +42,10 @@
       --mark-max: 7rem;
     }
 
-    /* Light theme overrides */
+    /* Light theme overrides (keep --bg-top / --bg-bottom as plain colors) */
     html[data-theme="light"] {
-      --bg: linear-gradient(180deg, #f8fafc, #eef2ff 120%);
+      --bg-top: #f8fafc;
+      --bg-bottom: #eef2ff;
       --accent: #6d28d9;
       --x: #b91c1c;
       --o: #0369a1;
@@ -64,7 +67,7 @@
       margin: 0;
       font-family: system-ui, -apple-system,
         "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom) 120%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -73,10 +76,9 @@
       transition: background 220ms ease, color 220ms ease;
     }
 
-    /* When in light theme swap body colors to use variables properly */
+    /* When in light theme swap body text color; background is already driven by variables */
     html[data-theme="light"] body {
       color: #0f1724;
-      background: var(--bg);
     }
 
     .ttt__container {
@@ -313,7 +315,7 @@
     <header>
       <div style="display:flex;align-items:center;gap:12px;">
         <h1>Tic Tac Toe</h1>
-        <button id="themeToggle" class="ttt__btn" aria-pressed="false" title="Toggle dark / light mode">🌙</button>
+        <button id="themeToggle" class="ttt__btn" aria-pressed="false" aria-label="Toggle theme: switch between dark and light modes" title="Toggle dark / light mode">🌙</button>
       </div>
 
       <div class="ttt__status">
@@ -405,7 +407,7 @@
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       // Computer opponent state
-      let vsComputer = false;
+      let isVsComputer = false;
       let computerSide = 'O';
       let computerMoveTimeout = null;
 
@@ -420,8 +422,8 @@
         resetScoresBtn.addEventListener('click', resetScores);
 
         vsComputerCheckbox.addEventListener('change', (e) => {
-          vsComputer = e.target.checked;
-          computerSideSelect.disabled = !vsComputer;
+          isVsComputer = e.target.checked;
+          computerSideSelect.disabled = !isVsComputer;
 
           // If enabling vsComputer and it's computer's turn, trigger move
           maybeTriggerComputerTurn();
@@ -440,9 +442,9 @@
         }
 
         // set defaults in UI
-        vsComputerCheckbox.checked = vsComputer;
+        vsComputerCheckbox.checked = isVsComputer;
         computerSideSelect.value = computerSide;
-        computerSideSelect.disabled = !vsComputer;
+        computerSideSelect.disabled = !isVsComputer;
 
         // sync theme button with current theme
         applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
@@ -467,7 +469,7 @@
         if (!isGameActive) return;
 
         // Prevent human from playing on the computer's turn
-        if (vsComputer && currentPlayer === computerSide) return;
+        if (isVsComputer && currentPlayer === computerSide) return;
 
         if (board[idx]) return;
 
@@ -482,7 +484,7 @@
         // Check win
         if (checkWin()) {
           isGameActive = false;
-          const winnerLabel = (vsComputer && currentPlayer === computerSide) ? ('Computer (' + currentPlayer + ')') : ('Player ' + currentPlayer);
+          const winnerLabel = (isVsComputer && currentPlayer === computerSide) ? ('Computer (' + currentPlayer + ')') : ('Player ' + currentPlayer);
           updateStatus(winnerLabel + ' wins!');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
@@ -515,7 +517,7 @@
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
         // Update status: if computer turn, announce computer's turn
-        if (vsComputer && currentPlayer === computerSide) {
+        if (isVsComputer && currentPlayer === computerSide) {
           updateStatus("Computer's turn");
           // schedule computer move
           maybeTriggerComputerTurn();
@@ -732,7 +734,7 @@
 
         removeAllHints();
 
-        if (!vsComputer || !isGameActive) return;
+        if (!isVsComputer || !isGameActive) return;
         if (currentPlayer !== computerSide) return;
 
         // Announce computer turn
@@ -757,7 +759,7 @@
 
       function computerMakeMove() {
         if (!isGameActive) return;
-        if (!vsComputer) return;
+        if (!isVsComputer) return;
         if (currentPlayer !== computerSide) return;
 
         // remove hints in case they're present
