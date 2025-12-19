@@ -121,7 +121,7 @@
     <header>
       <h1>Tic Tac Toe</h1>
       <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player Santa's turn</div>
+        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
         <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
       </div>
     </header>
@@ -168,9 +168,15 @@
         [0,4,8], [2,4,6]
       ];
 
-      // Visual mapping for the Xmas theme
-      const VISUAL_MARK = { X: '🎅', O: '🍪' };
-      function playerName(p) { return p === 'X' ? 'Santa' : 'Cookie'; }
+      // Visual mapping for the Xmas theme (presentational only)
+      const VISUAL_MARK = { X: '\uD83C\uDF85', O: '\uD83C\uDF6A' };
+      function playerName(p) {
+        if (!p) return 'empty';
+        const up = String(p).toUpperCase();
+        if (up === 'X') return 'Santa';
+        if (up === 'O') return 'Cookie';
+        return up;
+      }
 
       let board = Array(9).fill('');
       let currentPlayer = 'X';
@@ -178,14 +184,14 @@
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       function init() {
-        cellEls.forEach(function (cell) {
+        cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
         });
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
-        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
+        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
       }
 
@@ -216,7 +222,7 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + playerName(currentPlayer) + ' wins! Click New Game to play again.');
+          updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
@@ -233,7 +239,7 @@
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
+        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
       }
 
       function updateCellUI(idx) {
@@ -244,12 +250,12 @@
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
         if (val) {
-          cell.classList.add('ttt__cell--' + val.toLowerCase());
+          cell.classList.add(`ttt__cell--${val.toLowerCase()}`);
         }
 
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-        const label = 'Row ' + row + ', Column ' + col + ', ' + (board[idx] ? playerName(board[idx]) : 'empty');
+        const label = `Row ${row}, Column ${col}, ${board[idx] ? playerName(board[idx]) : 'empty'}`;
         cell.setAttribute('aria-label', label);
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
@@ -282,18 +288,18 @@
         currentPlayer = 'X';
         isGameActive = true;
 
-        cellEls.forEach(function (cell, i) {
+        cellEls.forEach((cell, i) => {
           cell.textContent = '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
           const r = Math.floor(i / 3) + 1;
           const c = (i % 3) + 1;
 
-          cell.setAttribute('aria-label', 'Row ' + r + ', Column ' + c + ', empty');
+          cell.setAttribute('aria-label', `Row ${r}, Column ${c}, empty`);
           cell.setAttribute('aria-pressed', 'false');
         });
 
-        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
+        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
 
         // focus first cell for accessibility
@@ -308,19 +314,19 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = 'Santa: ' + SCORE.X;
-        scoreOEl.textContent = 'Cookie: ' + SCORE.O;
-        scoreDEl.textContent = 'Draws: ' + SCORE.draws;
+        scoreXEl.textContent = `Santa: ${SCORE.X}`;
+        scoreOEl.textContent = `Cookie: ${SCORE.O}`;
+        scoreDEl.textContent = `Draws: ${SCORE.draws}`;
       }
 
       function render() {
-        cellEls.forEach(function (cell, i) {
+        cellEls.forEach((cell, i) => {
           const val = board[i];
           cell.textContent = val ? VISUAL_MARK[val] : '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
           if (val) {
-            cell.classList.add('ttt__cell--' + val.toLowerCase());
+            cell.classList.add(`ttt__cell--${val.toLowerCase()}`);
           }
         });
 
