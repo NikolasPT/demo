@@ -121,7 +121,7 @@
     <header>
       <h1>Tic Tac Toe</h1>
       <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player X's turn</div>
+        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Player Santa's turn</div>
         <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
       </div>
     </header>
@@ -140,8 +140,8 @@
 
     <div class="ttt__controls">
       <div class="ttt__score">
-        <span id="scoreX" class="ttt__score-item">X: 0</span>
-        <span id="scoreO" class="ttt__score-item">O: 0</span>
+        <span id="scoreX" class="ttt__score-item">Santa: 0</span>
+        <span id="scoreO" class="ttt__score-item">Cookie: 0</span>
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
@@ -168,6 +168,10 @@
         [0,4,8], [2,4,6]
       ];
 
+      // Visual mapping for the Xmas theme
+      const VISUAL_MARK = { X: '🎅', O: '🍪' };
+      function playerName(p) { return p === 'X' ? 'Santa' : 'Cookie'; }
+
       let board = Array(9).fill('');
       let currentPlayer = 'X';
       let isGameActive = true;
@@ -181,7 +185,7 @@
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
         render();
       }
 
@@ -212,7 +216,7 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus('Player ' + currentPlayer + ' wins! Click New Game to play again.');
+          updateStatus('Player ' + playerName(currentPlayer) + ' wins! Click New Game to play again.');
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
@@ -229,13 +233,14 @@
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
       }
 
       function updateCellUI(idx) {
         const cell = cellEls[idx];
         const val = board[idx];
-        cell.textContent = val;
+        // use themed emoji for display while keeping board values as 'X'/'O'
+        cell.textContent = val ? VISUAL_MARK[val] : '';
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
         if (val) {
@@ -244,7 +249,7 @@
 
         const row = Math.floor(idx / 3) + 1;
         const col = (idx % 3) + 1;
-        const label = 'Row ' + row + ', Column ' + col + ', ' + (board[idx] || 'empty');
+        const label = 'Row ' + row + ', Column ' + col + ', ' + (board[idx] ? playerName(board[idx]) : 'empty');
         cell.setAttribute('aria-label', label);
         cell.setAttribute('aria-pressed', board[idx] ? 'true' : 'false');
       }
@@ -288,7 +293,7 @@
           cell.setAttribute('aria-pressed', 'false');
         });
 
-        updateStatus("Player " + currentPlayer + "'s turn");
+        updateStatus("Player " + playerName(currentPlayer) + "'s turn");
         render();
 
         // focus first cell for accessibility
@@ -303,15 +308,15 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = 'X: ' + SCORE.X;
-        scoreOEl.textContent = 'O: ' + SCORE.O;
+        scoreXEl.textContent = 'Santa: ' + SCORE.X;
+        scoreOEl.textContent = 'Cookie: ' + SCORE.O;
         scoreDEl.textContent = 'Draws: ' + SCORE.draws;
       }
 
       function render() {
         cellEls.forEach(function (cell, i) {
           const val = board[i];
-          cell.textContent = val;
+          cell.textContent = val ? VISUAL_MARK[val] : '';
           cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
           if (val) {
