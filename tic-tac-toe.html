@@ -16,6 +16,9 @@
       --container-bg: rgba(255,255,255,0.02);
       --cell-bg: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
       --cell-border: rgba(255,255,255,0.04);
+      --btn-border: rgba(255,255,255,0.06);
+      --score-bg: rgba(255,255,255,0.02);
+      --container-shadow: 0 6px 30px rgba(2,6,23,0.06);
       --x: #e11d48;
       --o: #06b6d4;
       --muted: #94a3b8;
@@ -31,6 +34,9 @@
       --container-bg: #ffffff;
       --cell-bg: linear-gradient(180deg, rgba(2,6,23,0.02), transparent);
       --cell-border: rgba(2,6,23,0.06);
+      --btn-border: rgba(2,6,23,0.06);
+      --score-bg: rgba(2,6,23,0.02);
+      --container-shadow: 0 6px 20px rgba(2,6,23,0.04);
       --x: #b91c1c;
       --o: #0ea5a4;
       --muted: #475569;
@@ -62,7 +68,7 @@
       background: var(--container-bg);
       border-radius: 12px;
       padding: 20px 20px 28px;
-      box-shadow: 0 6px 30px rgba(2,6,23,0.06);
+      box-shadow: var(--container-shadow);
       position: relative;
       overflow: visible;
       transition: background 200ms ease, box-shadow 200ms ease;
@@ -122,7 +128,7 @@
 
     .ttt__btn {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid var(--btn-border);
       color: inherit;
       padding: 8px 12px;
       border-radius: 8px;
@@ -140,10 +146,9 @@
     }
 
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
-    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
+    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: var(--score-bg); padding: 6px 8px; border-radius: 8px; }
 
     @media (max-width: 420px) {
-      :root { --mark-vw-factor: 18vw; }
       .ttt__container { padding: 14px; }
     }
 
@@ -227,10 +232,12 @@
       /* Theme helpers */
       function getSavedTheme() {
         try {
-          return localStorage.getItem(THEME_KEY);
+          const v = localStorage.getItem(THEME_KEY);
+          if (v === 'light' || v === 'dark') return v;
         } catch (e) {
-          return null;
+          /* ignore */
         }
+        return null;
       }
 
       function getSystemTheme() {
@@ -240,10 +247,16 @@
         return 'dark';
       }
 
+      function normalizeTheme(t) {
+        return t === 'light' ? 'light' : 'dark';
+      }
+
       function applyTheme(theme) {
         if (!theme) return;
-        document.documentElement.dataset.theme = theme;
-        const isLight = theme === 'light';
+        // validate theme input
+        const valid = (theme === 'light' || theme === 'dark') ? theme : 'dark';
+        document.documentElement.dataset.theme = valid;
+        const isLight = valid === 'light';
         if (themeToggleBtn) {
           themeToggleBtn.textContent = isLight ? '☀️' : '🌙';
           themeToggleBtn.setAttribute('aria-pressed', isLight ? 'true' : 'false');
@@ -253,10 +266,12 @@
       }
 
       function toggleTheme() {
-        const current = document.documentElement.dataset.theme || getSystemTheme();
+        const rawCurrent = document.documentElement.dataset.theme || getSystemTheme();
+        const current = (rawCurrent === 'light' || rawCurrent === 'dark') ? rawCurrent : getSystemTheme();
         const next = current === 'light' ? 'dark' : 'light';
-        try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-        applyTheme(next);
+        const validated = normalizeTheme(next);
+        try { localStorage.setItem(THEME_KEY, validated); } catch (e) {}
+        applyTheme(validated);
       }
 
       function initTheme() {
