@@ -114,15 +114,56 @@
       .ttt__container { padding: 14px; }
     }
 
+    /* Light theme overrides */
+    html[data-theme="light"] {
+      color-scheme: light;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f8fafc;
+      --x: #dc2626;
+      --o: #0ea5a4;
+      --muted: #475569;
+    }
+
+    html[data-theme="light"] body {
+      color: #0b1220;
+      background: linear-gradient(180deg, var(--bg), #e6eef8 120%);
+    }
+
+    html[data-theme="light"] .ttt__container {
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
+      color: #0b1220;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.06);
+    }
+
+    html[data-theme="light"] .ttt__cell {
+      border-color: rgba(0,0,0,0.06);
+      background: linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
+      color: var(--muted);
+    }
+
+    html[data-theme="light"] .ttt__btn {
+      border-color: rgba(0,0,0,0.06);
+    }
+
+    html[data-theme="light"] .ttt__btn--primary {
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      color: white;
+    }
+
   </style>
 </head>
 <body>
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-      <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
-        <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="ttt__status">
+          <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
+          <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+        </div>
+        <button id="themeToggle" class="ttt__btn" title="Toggle dark / light mode" aria-pressed="false">🌙</button>
       </div>
     </header>
 
@@ -161,6 +202,9 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const themeToggleBtn = document.getElementById('themeToggle');
+
+      const THEME_KEY = 'ttt-theme';
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -183,7 +227,34 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          themeToggleBtn.textContent = '☀️';
+          themeToggleBtn.setAttribute('aria-pressed', 'true');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          themeToggleBtn.textContent = '🌙';
+          themeToggleBtn.setAttribute('aria-pressed', 'false');
+        }
+      }
+
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const next = current === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+        try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+      }
+
       function init() {
+        // Apply stored theme (or default to dark)
+        try {
+          const saved = localStorage.getItem(THEME_KEY);
+          applyTheme(saved === 'light' ? 'light' : 'dark');
+        } catch (e) {
+          applyTheme('dark');
+        }
+
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
           cell.addEventListener('keydown', onCellKeyDown);
@@ -191,6 +262,8 @@
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+        themeToggleBtn.addEventListener('click', toggleTheme);
+
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
       }
