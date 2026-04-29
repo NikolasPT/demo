@@ -164,7 +164,7 @@
       <div style="display:flex;gap:8px;align-items:center;">
         <label class="ttt__play-computer" for="playComputer">
           <input type="checkbox" id="playComputer" />
-          <span>Play vs Computer</span>
+          <span>Play vs Computer (Computer = O)</span>
         </label>
         <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
         <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
@@ -258,7 +258,14 @@
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
+
+          // If playing vs computer and O won, show "Computer wins"
+          if (playVsComputer && currentPlayer === 'O') {
+            updateStatus('Computer wins! Click New Game to play again.');
+          } else {
+            updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
+          }
+
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
@@ -280,43 +287,14 @@
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
 
         // If enabled and it's computer's turn, schedule computer move
         if (playVsComputer && currentPlayer === 'O' && isGameActive) {
-          computerMove();
+          scheduleComputerMove();
+          return;
         }
-      }
 
-      function clearPendingComputerMove() {
-        if (computerTimeout) {
-          clearTimeout(computerTimeout);
-          computerTimeout = null;
-        }
-      }
-
-      function computerMove() {
-        if (!isGameActive || currentPlayer !== 'O') return;
-
-        const empties = board
-          .map((v, i) => (v ? null : i))
-          .filter(i => i !== null);
-
-        if (empties.length === 0) return;
-
-        // simple AI: random choice
-        const choice = empties[Math.floor(Math.random() * empties.length)];
-
-        updateStatus('Computer is thinking...');
-
-        // small delay to simulate thinking
-        clearPendingComputerMove();
-        computerTimeout = setTimeout(() => {
-          computerTimeout = null;
-          // ensure game still active
-          if (!isGameActive || currentPlayer !== 'O') return;
-          placeMove(choice);
-        }, 450);
+        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
       }
 
       function updateCellUI(idx) {
@@ -411,6 +389,67 @@
         });
 
         updateScoreUI();
+      }
+
+      function clearPendingComputerMove() {
+        if (computerTimeout) {
+          clearTimeout(computerTimeout);
+          computerTimeout = null;
+        }
+      }
+
+      function scheduleComputerMove() {
+        if (!isGameActive || currentPlayer !== 'O') return;
+        updateStatus('Computer is thinking...');
+        clearPendingComputerMove();
+        computerTimeout = setTimeout(() => {
+          computerTimeout = null;
+          if (!isGameActive || currentPlayer !== 'O') return;
+          const idx = findComputerMove();
+          if (typeof idx === 'number' && idx >= 0) {
+            placeMove(idx);
+          }
+        }, 350 + Math.floor(Math.random() * 150));
+      }
+
+      function findComputerMove() {
+        const empty = board.map((v,i) => v ? null : i).filter(v => v !== null);
+
+        // 1) Win if possible
+        for (let i = 0; i < empty.length; i++) {
+          const idx = empty[i];
+          const clone = board.slice();
+          clone[idx] = 'O';
+          if (checkWinsForMark(clone, 'O')) return idx;
+        }
+
+        // 2) Block opponent win
+        for (let i = 0; i < empty.length; i++) {
+          const idx = empty[i];
+          const clone = board.slice();
+          clone[idx] = 'X';
+          if (checkWinsForMark(clone, 'X')) return idx;
+        }
+
+        // 3) Take center
+        if (!board[4]) return 4;
+
+        // 4) Take a corner
+        const corners = [0,2,6,8];
+        for (let i = 0; i < corners.length; i++) {
+          if (!board[corners[i]]) return corners[i];
+        }
+
+        // 5) Fallback to first available
+        return board.findIndex(v => !v);
+      }
+
+      function checkWinsForMark(simBoard, mark) {
+        for (let i = 0; i < WINNING_COMBOS.length; i++) {
+          const [a,b,c] = WINNING_COMBOS[i];
+          if (simBoard[a] === mark && simBoard[b] === mark && simBoard[c] === mark) return true;
+        }
+        return false;
       }
 
       if (document.readyState === 'loading') {
