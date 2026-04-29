@@ -140,8 +140,8 @@
 
     <div class="ttt__controls">
       <div class="ttt__score">
-        <span id="scoreX" class="ttt__score-item">Santa: 0</span>
-        <span id="scoreO" class="ttt__score-item">Cookie: 0</span>
+        <span id="scoreX" class="ttt__score-item">X: 0</span>
+        <span id="scoreO" class="ttt__score-item">O: 0</span>
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
@@ -168,13 +168,13 @@
         [0,4,8], [2,4,6]
       ];
 
-      // Visual mapping for the Xmas theme (presentational only)
-      const VISUAL_MARK = { X: '\uD83C\uDF85', O: '\uD83C\uDF6A' };
+      // Visual mapping for marks (presentational only)
+      const VISUAL_MARK = { X: 'X', O: 'O' };
       function playerName(p) {
         if (!p) return 'empty';
         const up = String(p).toUpperCase();
-        if (up === 'X') return 'Santa';
-        if (up === 'O') return 'Cookie';
+        if (up === 'X') return 'X';
+        if (up === 'O') return 'O';
         return up;
       }
 
@@ -245,7 +245,7 @@
       function updateCellUI(idx) {
         const cell = cellEls[idx];
         const val = board[idx];
-        // use themed emoji for display while keeping board values as 'X'/'O'
+        // use plain marks for display while keeping board values as 'X'/'O'
         cell.textContent = val ? VISUAL_MARK[val] : '';
         cell.classList.remove('ttt__cell--x','ttt__cell--o');
 
@@ -314,8 +314,8 @@
       }
 
       function updateScoreUI() {
-        scoreXEl.textContent = `Santa: ${SCORE.X}`;
-        scoreOEl.textContent = `Cookie: ${SCORE.O}`;
+        scoreXEl.textContent = `X: ${SCORE.X}`;
+        scoreOEl.textContent = `O: ${SCORE.O}`;
         scoreDEl.textContent = `Draws: ${SCORE.draws}`;
       }
 
