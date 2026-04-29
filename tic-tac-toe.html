@@ -109,8 +109,8 @@
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
     .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
-    /* Play vs Computer checkbox as inline control */
-    .ttt__play-computer {
+    /* Play vs Computer checkbox as inline control (BEM-consistent name) */
+    .ttt__controls__play {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -123,7 +123,7 @@
       cursor: pointer;
     }
 
-    .ttt__play-computer input { width: 16px; height: 16px; }
+    .ttt__controls__play input { width: 16px; height: 16px; }
 
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
@@ -162,7 +162,7 @@
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;">
-        <label class="ttt__play-computer" for="playComputer">
+        <label class="ttt__controls__play" for="playComputer">
           <input type="checkbox" id="playComputer" />
           <span>Play vs Computer (Computer = O)</span>
         </label>
@@ -215,12 +215,17 @@
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
 
-        playVsComputer = !!playComputerCheckbox.checked;
-        playComputerCheckbox.addEventListener('change', () => {
-          // toggle mode and reset game for consistency
+        // Defensive check for checkbox element existence
+        if (playComputerCheckbox) {
           playVsComputer = !!playComputerCheckbox.checked;
-          resetGame();
-        });
+          playComputerCheckbox.addEventListener('change', () => {
+            // toggle mode and reset game for consistency
+            playVsComputer = !!playComputerCheckbox.checked;
+            resetGame();
+          });
+        } else {
+          playVsComputer = false;
+        }
 
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
@@ -239,6 +244,9 @@
         if (!isGameActive) {
           return;
         }
+
+        // If a computer move is pending, ignore user input
+        if (computerTimeout) return;
 
         // If playing vs computer and it's the computer's turn, ignore human clicks
         if (playVsComputer && currentPlayer === 'O') {
@@ -365,6 +373,9 @@
       }
 
       function resetScores() {
+        // clear any pending computer moves to avoid unexpected behavior
+        clearPendingComputerMove();
+
         SCORE.X = 0;
         SCORE.O = 0;
         SCORE.draws = 0;
