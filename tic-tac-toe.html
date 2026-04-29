@@ -109,6 +109,22 @@
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
     .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
+    /* Play vs Computer checkbox as inline control */
+    .ttt__play-computer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.01);
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .ttt__play-computer input { width: 16px; height: 16px; }
+
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
       .ttt__container { padding: 14px; }
@@ -145,7 +161,11 @@
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
-      <div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label class="ttt__play-computer" for="playComputer">
+          <input type="checkbox" id="playComputer" />
+          <span>Play vs Computer</span>
+        </label>
         <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
         <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
       </div>
@@ -161,6 +181,7 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const playComputerCheckbox = document.getElementById('playComputer');
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -181,7 +202,9 @@
       let board = Array(9).fill('');
       let currentPlayer = 'X';
       let isGameActive = true;
+      let playVsComputer = false; // whether the computer is playing as O
       const SCORE = { X: 0, O: 0, draws: 0 };
+      let computerTimeout = null;
 
       function init() {
         cellEls.forEach(cell => {
@@ -191,6 +214,14 @@
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+
+        playVsComputer = !!playComputerCheckbox.checked;
+        playComputerCheckbox.addEventListener('change', () => {
+          // toggle mode and reset game for consistency
+          playVsComputer = !!playComputerCheckbox.checked;
+          resetGame();
+        });
+
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
       }
@@ -206,6 +237,11 @@
         const idx = Number(e.currentTarget.dataset.index);
 
         if (!isGameActive) {
+          return;
+        }
+
+        // If playing vs computer and it's the computer's turn, ignore human clicks
+        if (playVsComputer && currentPlayer === 'O') {
           return;
         }
 
@@ -226,6 +262,9 @@
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
+          // clear any pending computer action
+          clearPendingComputerMove();
+
           return;
         }
 
@@ -235,11 +274,49 @@
           SCORE.draws = SCORE.draws + 1;
           updateScoreUI();
 
+          clearPendingComputerMove();
+
           return;
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+
+        // If enabled and it's computer's turn, schedule computer move
+        if (playVsComputer && currentPlayer === 'O' && isGameActive) {
+          computerMove();
+        }
+      }
+
+      function clearPendingComputerMove() {
+        if (computerTimeout) {
+          clearTimeout(computerTimeout);
+          computerTimeout = null;
+        }
+      }
+
+      function computerMove() {
+        if (!isGameActive || currentPlayer !== 'O') return;
+
+        const empties = board
+          .map((v, i) => (v ? null : i))
+          .filter(i => i !== null);
+
+        if (empties.length === 0) return;
+
+        // simple AI: random choice
+        const choice = empties[Math.floor(Math.random() * empties.length)];
+
+        updateStatus('Computer is thinking...');
+
+        // small delay to simulate thinking
+        clearPendingComputerMove();
+        computerTimeout = setTimeout(() => {
+          computerTimeout = null;
+          // ensure game still active
+          if (!isGameActive || currentPlayer !== 'O') return;
+          placeMove(choice);
+        }, 450);
       }
 
       function updateCellUI(idx) {
@@ -284,6 +361,9 @@
       }
 
       function resetGame() {
+        // clear any pending computer moves
+        clearPendingComputerMove();
+
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
