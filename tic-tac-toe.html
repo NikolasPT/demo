@@ -388,6 +388,8 @@
       }
 
       function placeMove(idx) {
+        // defensive guard: ignore invalid indices
+        if (typeof idx !== 'number' || idx < 0 || idx > 8) return;
         // guard: index must be empty and game active
         if (!isGameActive || board[idx]) return;
 
@@ -523,23 +525,23 @@
 
       function findBestMove(boardState, aiMark) {
         // returns best index (0-8) for aiMark on boardState
-        const result = minimax(boardState.slice(), aiMark, 0, true);
+        const result = minimax(boardState.slice(), aiMark, 0);
         return result.index;
       }
 
       // minimax returns { score, index }
-      function minimax(b, playerMark, depth, isRoot) {
+      function minimax(b, playerMark, depth) {
         const winner = checkWinForBoard(b);
         if (winner) {
           if (winner === playerMark) {
-            return { score: 10 - depth };
+            return { score: 10 - depth, index: -1 };
           } else {
-            return { score: depth - 10 };
+            return { score: depth - 10, index: -1 };
           }
         }
 
         if (checkDrawForBoard(b)) {
-          return { score: 0 };
+          return { score: 0, index: -1 };
         }
 
         const current = currentTurnInMinimax(b);
@@ -551,7 +553,7 @@
           if (b[i]) continue;
           b[i] = current; // make move
 
-          const res = minimax(b, playerMark, depth + 1, false);
+          const res = minimax(b, playerMark, depth + 1);
           b[i] = '';
 
           if (isMaximizing) {
@@ -589,16 +591,28 @@
         // compute move synchronously (fast)
         const idx = findBestMove(board, computerPlayer);
 
-        // ensure the chosen index is valid; fallback to first empty
-        let finalIdx = idx;
-        if (typeof finalIdx !== 'number' || board[finalIdx]) {
-          finalIdx = board.findIndex(v => !v);
+        // choose safe final index: prefer idx if valid, otherwise first empty
+        let finalIdx = (typeof idx === 'number' && idx >= 0 && idx < 9 && !board[idx]) ? idx : board.findIndex(v => !v);
+
+        // if there's no valid move, bail out safely
+        if (typeof finalIdx !== 'number' || finalIdx < 0) {
+          aiThinking = false;
+          // update status back to player's turn if appropriate
+          if (isGameActive) updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+          return;
         }
 
-        // small delay to make it feel natural
+        // small delay to make it feel natural; keep aiThinking true until after move is applied
         setTimeout(() => {
-          aiThinking = false;
+          // If game ended while waiting, don't play
+          if (!isGameActive) {
+            aiThinking = false;
+            return;
+          }
+
           placeMove(finalIdx);
+          // release lock after move is applied
+          aiThinking = false;
         }, 200);
       }
 
