@@ -9,10 +9,10 @@
   <script>
     (function () {
       try {
-        var k = 'ttt_theme';
-        var s = localStorage.getItem(k);
-        if (s === 'light' || s === 'dark') {
-          document.documentElement.setAttribute('data-theme', s);
+        const THEME_KEY = 'ttt_theme';
+        const stored = localStorage.getItem(THEME_KEY);
+        if (stored === 'light' || stored === 'dark') {
+          document.documentElement.setAttribute('data-theme', stored);
         } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
           document.documentElement.setAttribute('data-theme', 'light');
         }
