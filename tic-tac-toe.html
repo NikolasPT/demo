@@ -109,6 +109,27 @@
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
     .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
 
+    /* Game mode selector styling */
+    .ttt__mode {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-right: 8px;
+    }
+
+    .ttt__mode label { font-size: 13px; color: var(--muted); }
+
+    .ttt__mode select {
+      appearance: none;
+      background: rgba(255,255,255,0.02);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
       .ttt__container { padding: 14px; }
@@ -139,10 +160,21 @@
     </section>
 
     <div class="ttt__controls">
-      <div class="ttt__score">
-        <span id="scoreX" class="ttt__score-item">X: 0</span>
-        <span id="scoreO" class="ttt__score-item">O: 0</span>
-        <span id="scoreD" class="ttt__score-item">Draws: 0</span>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="ttt__mode">
+          <label for="gameMode">Mode</label>
+          <select id="gameMode" aria-label="Game mode">
+            <option value="pvp">Two players</option>
+            <option value="pvc_o">Play vs Computer (Computer = O)</option>
+            <option value="pvc_x">Play vs Computer (Computer = X)</option>
+          </select>
+        </div>
+
+        <div class="ttt__score">
+          <span id="scoreX" class="ttt__score-item">X: 0</span>
+          <span id="scoreO" class="ttt__score-item">O: 0</span>
+          <span id="scoreD" class="ttt__score-item">Draws: 0</span>
+        </div>
       </div>
 
       <div>
@@ -161,6 +193,7 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const gameModeEl = document.getElementById('gameMode');
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -183,6 +216,11 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      // Computer mode state
+      let vsComputer = false;
+      let computerPlayer = 'O';
+      let computerThinkingTimer = null;
+
       function init() {
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
@@ -191,8 +229,32 @@
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+
+        gameModeEl.addEventListener('change', onModeChange);
+
+        // initialize from current select value
+        applyModeFromSelect();
+
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
+      }
+
+      function onModeChange() {
+        applyModeFromSelect();
+        resetGame();
+      }
+
+      function applyModeFromSelect() {
+        const v = gameModeEl.value;
+        if (v === 'pvp') {
+          vsComputer = false;
+        } else if (v === 'pvc_o') {
+          vsComputer = true;
+          computerPlayer = 'O';
+        } else if (v === 'pvc_x') {
+          vsComputer = true;
+          computerPlayer = 'X';
+        }
       }
 
       function onCellKeyDown(e) {
@@ -209,6 +271,11 @@
           return;
         }
 
+        // Ignore clicks when it's computer's turn
+        if (vsComputer && currentPlayer === computerPlayer) {
+          return;
+        }
+
         if (board[idx]) {
           return;
         }
@@ -217,12 +284,24 @@
       }
 
       function placeMove(idx) {
+        // clear any pending thinking timer if human interrupts (rare)
+        if (computerThinkingTimer) {
+          clearTimeout(computerThinkingTimer);
+          computerThinkingTimer = null;
+        }
+
         board[idx] = currentPlayer;
         updateCellUI(idx);
 
         if (checkWin()) {
           isGameActive = false;
-          updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
+          // if vsComputer and the winner is the computer, show computer-specific message
+          if (vsComputer && currentPlayer === computerPlayer) {
+            updateStatus(`Computer (${playerName(currentPlayer)}) wins! Click New Game to play again.`);
+          } else {
+            updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
+          }
+
           SCORE[currentPlayer] = SCORE[currentPlayer] + 1;
           updateScoreUI();
 
@@ -239,7 +318,18 @@
         }
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+
+        // If it's computer's turn, show a special status
+        if (vsComputer && currentPlayer === computerPlayer) {
+          updateStatus(`Computer (${playerName(currentPlayer)}) is thinking...`);
+          // slight delay before AI plays
+          computerThinkingTimer = setTimeout(() => {
+            makeComputerMove();
+            computerThinkingTimer = null;
+          }, 300);
+        } else {
+          updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+        }
       }
 
       function updateCellUI(idx) {
@@ -284,6 +374,12 @@
       }
 
       function resetGame() {
+        // clear any pending AI timer
+        if (computerThinkingTimer) {
+          clearTimeout(computerThinkingTimer);
+          computerThinkingTimer = null;
+        }
+
         board = Array(9).fill('');
         currentPlayer = 'X';
         isGameActive = true;
@@ -299,11 +395,21 @@
           cell.setAttribute('aria-pressed', 'false');
         });
 
+        // if mode indicates computer is X and starts, ensure computer moves first
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
 
         // focus first cell for accessibility
         try { cellEls[0].focus(); } catch (e) { /* ignore */ }
+
+        if (vsComputer && currentPlayer === computerPlayer) {
+          // trigger computer move
+          updateStatus(`Computer (${playerName(currentPlayer)}) is thinking...`);
+          computerThinkingTimer = setTimeout(() => {
+            makeComputerMove();
+            computerThinkingTimer = null;
+          }, 300);
+        }
       }
 
       function resetScores() {
@@ -331,6 +437,76 @@
         });
 
         updateScoreUI();
+      }
+
+      // --- AI helpers ---
+      function getEmptyIndices() {
+        const arr = [];
+        for (let i = 0; i < board.length; i++) {
+          if (!board[i]) arr.push(i);
+        }
+        return arr;
+      }
+
+      function wouldWinIf(player, idx) {
+        // simulate placing 'player' at idx and check win
+        const tmp = board.slice();
+        tmp[idx] = player;
+
+        for (let i = 0; i < WINNING_COMBOS.length; i++) {
+          const [a,b,c] = WINNING_COMBOS[i];
+          if (tmp[a] && tmp[a] === tmp[b] && tmp[a] === tmp[c]) return true;
+        }
+
+        return false;
+      }
+
+      function makeComputerMove() {
+        if (!isGameActive) return;
+
+        const me = computerPlayer;
+        const opp = me === 'X' ? 'O' : 'X';
+        const empty = getEmptyIndices();
+
+        // 1) Win if possible
+        for (let i = 0; i < empty.length; i++) {
+          const idx = empty[i];
+          if (wouldWinIf(me, idx)) {
+            placeMove(idx);
+            return;
+          }
+        }
+
+        // 2) Block opponent win
+        for (let i = 0; i < empty.length; i++) {
+          const idx = empty[i];
+          if (wouldWinIf(opp, idx)) {
+            placeMove(idx);
+            return;
+          }
+        }
+
+        // 3) Take center
+        if (!board[4]) {
+          placeMove(4);
+          return;
+        }
+
+        // 4) Take a corner
+        const corners = [0,2,6,8].filter(i => !board[i]);
+        if (corners.length > 0) {
+          const choice = corners[Math.floor(Math.random() * corners.length)];
+          placeMove(choice);
+          return;
+        }
+
+        // 5) Take any side
+        const sides = [1,3,5,7].filter(i => !board[i]);
+        if (sides.length > 0) {
+          const choice = sides[Math.floor(Math.random() * sides.length)];
+          placeMove(choice);
+          return;
+        }
       }
 
       if (document.readyState === 'loading') {
