@@ -10,7 +10,18 @@
       --x: #e11d48;
       --o: #06b6d4;
       --muted: #94a3b8;
+      --text: #e6eef8;
       color-scheme: dark;
+    }
+
+    /* Light theme overrides applied when document.documentElement has data-theme="light" */
+    :root[data-theme="light"] {
+      --bg: #f8fafc; /* slate-50 */
+      --x: #dc2626; /* red-600 */
+      --o: #0ea5a4; /* teal-ish */
+      --muted: #475569; /* slate-600 */
+      --text: #0f1724; /* slate-900 */
+      color-scheme: light;
     }
 
     * {
@@ -26,7 +37,7 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      color: #e6eef8;
+      color: var(--text);
     }
 
     .ttt__container {
@@ -38,6 +49,13 @@
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
       position: relative;
       overflow: visible;
+    }
+
+    /* Adjust container background/borders for light theme */
+    :root[data-theme="light"] .ttt__container {
+      background: rgba(15,23,36,0.03);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+      border: 1px solid rgba(2,6,23,0.04);
     }
 
     header {
@@ -78,6 +96,12 @@
       user-select: none;
     }
 
+    /* Lighter borders in light theme */
+    :root[data-theme="light"] .ttt__cell {
+      border-color: rgba(2,6,23,0.06);
+      background: linear-gradient(180deg, rgba(2,6,23,0.015), transparent);
+    }
+
     .ttt__cell:focus { outline: 3px solid rgba(124,58,237,0.18); }
 
     .ttt__cell--x { color: var(--x); }
@@ -100,6 +124,11 @@
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
 
+    /* Button borders for light theme */
+    :root[data-theme="light"] .ttt__btn {
+      border-color: rgba(2,6,23,0.06);
+    }
+
     .ttt__btn--primary {
       background: linear-gradient(90deg, #4f46e5, #7c3aed);
       border: none;
@@ -120,9 +149,12 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-      <div class="ttt__status">
-        <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
-        <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button id="themeToggle" class="ttt__btn" aria-pressed="false" aria-label="Toggle theme">🌙</button>
+        <div class="ttt__status">
+          <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
+          <div class="ttt__status-sub">Click a cell or use keyboard (Tab + Enter/Space)</div>
+        </div>
       </div>
     </header>
 
@@ -161,6 +193,9 @@
       const scoreXEl = document.getElementById('scoreX');
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
+      const themeToggle = document.getElementById('themeToggle');
+
+      const THEME_KEY = 'ttt_theme';
 
       const WINNING_COMBOS = [
         [0,1,2], [3,4,5], [6,7,8],
@@ -183,6 +218,38 @@
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
 
+      function applyTheme(theme) {
+        const t = theme === 'light' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        // update toggle UI
+        if (themeToggle) {
+          const isLight = t === 'light';
+          themeToggle.setAttribute('aria-pressed', String(isLight));
+          themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark theme' : 'Switch to light theme');
+          themeToggle.textContent = isLight ? '☀️' : '🌙';
+        }
+      }
+
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const next = current === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+        applyTheme(next);
+      }
+
+      function detectPreferredTheme() {
+        try {
+          const stored = localStorage.getItem(THEME_KEY);
+          if (stored === 'light' || stored === 'dark') return stored;
+        } catch (e) { /* ignore */ }
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          return 'light';
+        }
+
+        return 'dark';
+      }
+
       function init() {
         cellEls.forEach(cell => {
           cell.addEventListener('click', onCellClick);
@@ -191,6 +258,14 @@
 
         newGameBtn.addEventListener('click', resetGame);
         resetScoresBtn.addEventListener('click', resetScores);
+
+        if (themeToggle) {
+          themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Apply theme early based on stored preference or system
+        applyTheme(detectPreferredTheme());
+
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
       }
