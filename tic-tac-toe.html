@@ -195,7 +195,20 @@
         <span id="scoreD" class="ttt__score-item">Draws: 0</span>
       </div>
 
-      <div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div style="display:inline-flex; gap:8px; align-items:center;">
+          <label for="gameMode" style="font-size:13px;color:var(--muted);">Mode</label>
+          <select id="gameMode" class="ttt__btn" aria-label="Game mode">
+            <option value="pvp">Two players</option>
+            <option value="pvc">Vs Computer</option>
+          </select>
+          <label for="playerMark" style="font-size:13px;color:var(--muted);">You</label>
+          <select id="playerMark" class="ttt__btn" aria-label="Choose your mark">
+            <option value="X">X</option>
+            <option value="O">O</option>
+          </select>
+        </div>
+
         <button id="newGame" class="ttt__btn ttt__btn--primary">New Game</button>
         <button id="resetScores" class="ttt__btn" title="Reset scores">Reset Scores</button>
       </div>
@@ -212,6 +225,10 @@
       const scoreOEl = document.getElementById('scoreO');
       const scoreDEl = document.getElementById('scoreD');
       const themeToggle = document.getElementById('themeToggle');
+
+      // PvC controls
+      const gameModeEl = document.getElementById('gameMode');
+      const playerMarkEl = document.getElementById('playerMark');
 
       const THEME_KEY = 'ttt_theme';
 
@@ -235,6 +252,12 @@
       let currentPlayer = 'X';
       let isGameActive = true;
       const SCORE = { X: 0, O: 0, draws: 0 };
+
+      // New PvC state
+      let gameMode = 'pvp'; // 'pvp' or 'pvc'
+      let humanPlayer = 'X';
+      let computerPlayer = 'O';
+      let aiThinking = false;
 
       function applyTheme(theme) {
         const t = theme === 'light' ? 'light' : 'dark';
@@ -281,11 +304,61 @@
           themeToggle.addEventListener('click', toggleTheme);
         }
 
+        // PvC controls
+        if (gameModeEl) {
+          // initialize from stored or default
+          try {
+            const storedMode = localStorage.getItem('ttt_mode');
+            if (storedMode === 'pvp' || storedMode === 'pvc') {
+              gameMode = storedMode;
+            }
+          } catch (e) { /* ignore */ }
+
+          gameModeEl.value = gameMode;
+          gameModeEl.addEventListener('change', (e) => {
+            gameMode = e.target.value === 'pvc' ? 'pvc' : 'pvp';
+            try { localStorage.setItem('ttt_mode', gameMode); } catch (e) { /* ignore */ }
+
+            // If switching to pvc and the computer should move now, trigger it after a short delay
+            if (gameMode === 'pvc' && isGameActive && currentPlayer === computerPlayer && !aiThinking) {
+              setTimeout(runAIMove, 300);
+            }
+          });
+        }
+
+        if (playerMarkEl) {
+          try {
+            const storedMark = localStorage.getItem('ttt_human_mark');
+            if (storedMark === 'X' || storedMark === 'O') {
+              humanPlayer = storedMark;
+              computerPlayer = humanPlayer === 'X' ? 'O' : 'X';
+            }
+          } catch (e) { /* ignore */ }
+
+          playerMarkEl.value = humanPlayer;
+          playerMarkEl.addEventListener('change', (e) => {
+            const newMark = e.target.value === 'O' ? 'O' : 'X';
+            humanPlayer = newMark;
+            computerPlayer = humanPlayer === 'X' ? 'O' : 'X';
+            try { localStorage.setItem('ttt_human_mark', humanPlayer); } catch (e) { /* ignore */ }
+
+            // If game is active and it's now the computer's turn, let the AI move
+            if (isGameActive && gameMode === 'pvc' && currentPlayer === computerPlayer && !aiThinking) {
+              setTimeout(runAIMove, 300);
+            }
+          });
+        }
+
         // Apply theme early based on stored preference or system (also set earlier in head to avoid flash)
         applyTheme(detectPreferredTheme());
 
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
         render();
+
+        // If starting in PvC and computer starts, trigger first move
+        if (gameMode === 'pvc' && currentPlayer === computerPlayer) {
+          setTimeout(runAIMove, 300);
+        }
       }
 
       function onCellKeyDown(e) {
@@ -302,6 +375,11 @@
           return;
         }
 
+        // Prevent human interaction if AI is thinking or it's computer's turn
+        if (gameMode === 'pvc' && (aiThinking || currentPlayer === computerPlayer)) {
+          return;
+        }
+
         if (board[idx]) {
           return;
         }
@@ -310,6 +388,11 @@
       }
 
       function placeMove(idx) {
+        // defensive guard: ignore invalid indices
+        if (typeof idx !== 'number' || idx < 0 || idx > 8) return;
+        // guard: index must be empty and game active
+        if (!isGameActive || board[idx]) return;
+
         board[idx] = currentPlayer;
         updateCellUI(idx);
 
@@ -333,6 +416,11 @@
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+
+        // If PvC and it's the computer's turn, schedule an AI move
+        if (gameMode === 'pvc' && currentPlayer === computerPlayer && isGameActive && !aiThinking) {
+          setTimeout(runAIMove, 300);
+        }
       }
 
       function updateCellUI(idx) {
@@ -354,22 +442,11 @@
       }
 
       function checkWin() {
-        for (let i = 0; i < WINNING_COMBOS.length; i++) {
-          const combo = WINNING_COMBOS[i];
-          const a = combo[0];
-          const b = combo[1];
-          const c = combo[2];
-
-          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            return true;
-          }
-        }
-
-        return false;
+        return checkWinForBoard(board) !== null;
       }
 
       function checkDraw() {
-        return board.every(v => v);
+        return checkDrawForBoard(board);
       }
 
       function updateStatus(text) {
@@ -397,6 +474,11 @@
 
         // focus first cell for accessibility
         try { cellEls[0].focus(); } catch (e) { /* ignore */ }
+
+        // If PvC and computer starts (human chose O), trigger AI move
+        if (gameMode === 'pvc' && currentPlayer === computerPlayer) {
+          setTimeout(runAIMove, 300);
+        }
       }
 
       function resetScores() {
@@ -424,6 +506,114 @@
         });
 
         updateScoreUI();
+      }
+
+      // --- Helpers for AI (minimax) ---
+      function checkWinForBoard(b) {
+        for (let i = 0; i < WINNING_COMBOS.length; i++) {
+          const [a, x, y] = WINNING_COMBOS[i];
+          if (b[a] && b[a] === b[x] && b[a] === b[y]) {
+            return b[a];
+          }
+        }
+        return null;
+      }
+
+      function checkDrawForBoard(b) {
+        return b.every(v => v);
+      }
+
+      function findBestMove(boardState, aiMark) {
+        // returns best index (0-8) for aiMark on boardState
+        const result = minimax(boardState.slice(), aiMark, 0);
+        return result.index;
+      }
+
+      // minimax returns { score, index }
+      function minimax(b, playerMark, depth) {
+        const winner = checkWinForBoard(b);
+        if (winner) {
+          if (winner === playerMark) {
+            return { score: 10 - depth, index: -1 };
+          } else {
+            return { score: depth - 10, index: -1 };
+          }
+        }
+
+        if (checkDrawForBoard(b)) {
+          return { score: 0, index: -1 };
+        }
+
+        const current = currentTurnInMinimax(b);
+        const isMaximizing = current === playerMark;
+
+        let best = { score: isMaximizing ? -Infinity : Infinity, index: -1 };
+
+        for (let i = 0; i < b.length; i++) {
+          if (b[i]) continue;
+          b[i] = current; // make move
+
+          const res = minimax(b, playerMark, depth + 1);
+          b[i] = '';
+
+          if (isMaximizing) {
+            if (res.score > best.score) {
+              best.score = res.score;
+              best.index = i;
+            }
+          } else {
+            if (res.score < best.score) {
+              best.score = res.score;
+              best.index = i;
+            }
+          }
+        }
+
+        return best;
+      }
+
+      function currentTurnInMinimax(b) {
+        // Count marks to determine whose turn it is on board b
+        const xCount = b.filter(v => v === 'X').length;
+        const oCount = b.filter(v => v === 'O').length;
+        return xCount === oCount ? 'X' : 'O';
+      }
+
+      function runAIMove() {
+        if (!isGameActive) return;
+        if (aiThinking) return;
+        if (gameMode !== 'pvc') return;
+        if (currentPlayer !== computerPlayer) return;
+
+        aiThinking = true;
+        updateStatus('Computer is thinking...');
+
+        // compute move synchronously (fast)
+        const idx = findBestMove(board, computerPlayer);
+
+        // choose safe final index: prefer idx if valid, otherwise first empty
+        let finalIdx = (typeof idx === 'number' && idx >= 0 && idx < 9 && !board[idx]) ? idx : board.findIndex(v => !v);
+
+        // if there's no valid move, bail out safely
+        if (typeof finalIdx !== 'number' || finalIdx < 0) {
+          aiThinking = false;
+          // update status back to player's turn if appropriate
+          if (isGameActive) updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
+          return;
+        }
+
+        // small delay to make it feel natural; keep aiThinking true until after move is applied
+        setTimeout(() => {
+          // If game ended while waiting, don't play
+          if (!isGameActive) {
+            aiThinking = false;
+            return;
+          }
+
+          placeMove(finalIdx);
+          // release lock after move is applied
+          aiThinking = false;
+        }, 200);
       }
 
       if (document.readyState === 'loading') {
