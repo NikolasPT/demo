@@ -217,7 +217,7 @@
       const SCORE = { X: 0, O: 0, draws: 0 };
 
       // Computer mode state
-      let vsComputer = false;
+      let isVsComputer = false;
       let computerPlayer = 'O';
       let computerThinkingTimer = null;
 
@@ -247,12 +247,12 @@
       function applyModeFromSelect() {
         const v = gameModeEl.value;
         if (v === 'pvp') {
-          vsComputer = false;
+          isVsComputer = false;
         } else if (v === 'pvc_o') {
-          vsComputer = true;
+          isVsComputer = true;
           computerPlayer = 'O';
         } else if (v === 'pvc_x') {
-          vsComputer = true;
+          isVsComputer = true;
           computerPlayer = 'X';
         }
       }
@@ -272,7 +272,7 @@
         }
 
         // Ignore clicks when it's computer's turn
-        if (vsComputer && currentPlayer === computerPlayer) {
+        if (isVsComputer && currentPlayer === computerPlayer) {
           return;
         }
 
@@ -296,7 +296,7 @@
         if (checkWin()) {
           isGameActive = false;
           // if vsComputer and the winner is the computer, show computer-specific message
-          if (vsComputer && currentPlayer === computerPlayer) {
+          if (isVsComputer && currentPlayer === computerPlayer) {
             updateStatus(`Computer (${playerName(currentPlayer)}) wins! Click New Game to play again.`);
           } else {
             updateStatus(`Player ${playerName(currentPlayer)} wins! Click New Game to play again.`);
@@ -320,7 +320,7 @@
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
 
         // If it's computer's turn, show a special status
-        if (vsComputer && currentPlayer === computerPlayer) {
+        if (isVsComputer && currentPlayer === computerPlayer) {
           updateStatus(`Computer (${playerName(currentPlayer)}) is thinking...`);
           // slight delay before AI plays
           computerThinkingTimer = setTimeout(() => {
@@ -402,7 +402,7 @@
         // focus first cell for accessibility
         try { cellEls[0].focus(); } catch (e) { /* ignore */ }
 
-        if (vsComputer && currentPlayer === computerPlayer) {
+        if (isVsComputer && currentPlayer === computerPlayer) {
           // trigger computer move
           updateStatus(`Computer (${playerName(currentPlayer)}) is thinking...`);
           computerThinkingTimer = setTimeout(() => {
