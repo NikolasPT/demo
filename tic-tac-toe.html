@@ -4,24 +4,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Tic Tac Toe</title>
+
+  <!-- Apply stored or system theme as early as possible to avoid flash -->
+  <script>
+    (function () {
+      try {
+        var k = 'ttt_theme';
+        var s = localStorage.getItem(k);
+        if (s === 'light' || s === 'dark') {
+          document.documentElement.setAttribute('data-theme', s);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+
   <style>
     :root {
       --bg: #0f1724;
+      --bg-end: #071021; /* used for gradient end stop */
+
       --x: #e11d48;
       --o: #06b6d4;
       --muted: #94a3b8;
       --text: #e6eef8;
       color-scheme: dark;
+
+      /* Surface variables for overlays/borders so themes can override consistently */
+      --surface-bg: rgba(255,255,255,0.02);
+      --surface-border: rgba(255,255,255,0.04);
+      --surface-overlay: rgba(255,255,255,0.01);
+      --surface-overlay-strong: rgba(255,255,255,0.02);
+      --btn-border: rgba(255,255,255,0.06);
     }
 
     /* Light theme overrides applied when document.documentElement has data-theme="light" */
     :root[data-theme="light"] {
       --bg: #f8fafc; /* slate-50 */
+      --bg-end: #f1f5f9; /* light gradient end */
+
       --x: #dc2626; /* red-600 */
       --o: #0ea5a4; /* teal-ish */
       --muted: #475569; /* slate-600 */
       --text: #0f1724; /* slate-900 */
       color-scheme: light;
+
+      --surface-bg: rgba(2,6,23,0.03);
+      --surface-border: rgba(2,6,23,0.04);
+      --surface-overlay: rgba(2,6,23,0.015);
+      --surface-overlay-strong: rgba(2,6,23,0.03);
+      --btn-border: rgba(2,6,23,0.06);
     }
 
     * {
@@ -32,7 +65,7 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--bg), #071021 120%);
+      background: linear-gradient(180deg, var(--bg), var(--bg-end) 120%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -43,19 +76,13 @@
     .ttt__container {
       width: 100%;
       max-width: 720px;
-      background: rgba(255,255,255,0.02);
+      background: var(--surface-bg);
       border-radius: 12px;
       padding: 20px 20px 28px;
       box-shadow: 0 6px 30px rgba(2,6,23,0.6);
       position: relative;
       overflow: visible;
-    }
-
-    /* Adjust container background/borders for light theme */
-    :root[data-theme="light"] .ttt__container {
-      background: rgba(15,23,36,0.03);
-      box-shadow: 0 6px 18px rgba(2,6,23,0.06);
-      border: 1px solid rgba(2,6,23,0.04);
+      border: 1px solid transparent;
     }
 
     header {
@@ -72,6 +99,8 @@
     .ttt__status-msg { font-weight: 600; }
     .ttt__status-sub { font-size: 13px; color: var(--muted); }
 
+    .ttt__header-actions { display:flex; align-items:center; gap:12px; }
+
     .ttt__board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -83,8 +112,8 @@
       aspect-ratio: 1/1;
       padding: 0;
       border-radius: 10px;
-      border: 2px solid rgba(255,255,255,0.04);
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      border: 2px solid var(--surface-border);
+      background: linear-gradient(180deg, var(--surface-overlay), transparent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -94,12 +123,6 @@
       color: var(--muted);
       cursor: pointer;
       user-select: none;
-    }
-
-    /* Lighter borders in light theme */
-    :root[data-theme="light"] .ttt__cell {
-      border-color: rgba(2,6,23,0.06);
-      background: linear-gradient(180deg, rgba(2,6,23,0.015), transparent);
     }
 
     .ttt__cell:focus { outline: 3px solid rgba(124,58,237,0.18); }
@@ -116,17 +139,12 @@
 
     .ttt__btn {
       background: transparent;
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid var(--btn-border);
       color: inherit;
       padding: 8px 12px;
       border-radius: 8px;
       cursor: pointer;
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
-    }
-
-    /* Button borders for light theme */
-    :root[data-theme="light"] .ttt__btn {
-      border-color: rgba(2,6,23,0.06);
     }
 
     .ttt__btn--primary {
@@ -136,7 +154,7 @@
     }
 
     .ttt__score { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 14px; }
-    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 8px; border-radius: 8px; }
+    .ttt__score-item { display: inline-flex; gap: 6px; align-items: center; background: var(--surface-overlay-strong); padding: 6px 8px; border-radius: 8px; }
 
     @media (max-width: 420px) {
       :root { --mark-vw-factor: 18vw; }
@@ -149,7 +167,7 @@
   <main class="ttt__container">
     <header>
       <h1>Tic Tac Toe</h1>
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div class="ttt__header-actions">
         <button id="themeToggle" class="ttt__btn" aria-pressed="false" aria-label="Toggle theme">🌙</button>
         <div class="ttt__status">
           <div id="statusMsg" class="ttt__status-msg" aria-live="polite">Waiting...</div>
@@ -263,7 +281,7 @@
           themeToggle.addEventListener('click', toggleTheme);
         }
 
-        // Apply theme early based on stored preference or system
+        // Apply theme early based on stored preference or system (also set earlier in head to avoid flash)
         applyTheme(detectPreferredTheme());
 
         updateStatus(`Player ${playerName(currentPlayer)}'s turn`);
